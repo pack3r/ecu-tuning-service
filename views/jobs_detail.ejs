@@ -190,7 +190,7 @@
 
     <footer style="background: #1f2937; color: white; padding: 1rem; text-align: center; margin-top: 2rem;">
       <div style="max-width: 1200px; margin: 0 auto;">
-        <p style="margin: 0; font-size: 0.9rem;">© 2026 Serwis Plików ECU - Wersja 2.0.0</p>
+        <p style="margin: 0; font-size: 0.9rem;">© 2026 Serwis Plików ECU - Wersja 2.0.1</p>
       </div>
     </footer>
 
@@ -224,7 +224,7 @@
             const jobCompleted = '<%= job.status %>' === 'completed';
             const adminSentMessage = messages.some(msg => msg.user_role === 'admin');
             const hasOpenProblem = <%= job.hasOpenProblem ? 'true' : 'false' %>;
-            const canSend = adminSentMessage && (!jobCompleted || (jobCompleted && hasOpenProblem));
+            const canSend = adminSentMessage && (!jobCompleted || hasOpenProblem);
             const waitingMsg = document.getElementById('waiting-msg');
             if (canSend) {
               chatForm.style.display = 'flex';

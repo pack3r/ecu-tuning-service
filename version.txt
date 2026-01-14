@@ -1,7 +1,14 @@
-VERSION: 2.0.0
+VERSION: 2.0.1
 DATE: 2026-01-14
 
 CHANGELOG:
+
+=== VERSION 2.0.1 (2026-01-14) ===
+MINOR FIXES:
+- Fixed chat access logic: clients with open problems must wait for admin to send first message
+- Added footer with version display to all pages
+- Created version.txt file for change tracking
+- Improved problem reporting workflow
 
 === VERSION 2.0.0 (2026-01-14) ===
 MAJOR FEATURES:
