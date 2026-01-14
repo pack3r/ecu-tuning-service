@@ -20,6 +20,13 @@
 
     <main class="container">
       <h1>Wszystkie zadania</h1>
+      <div id="notification" style="display: none; background: #10b981; color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+        Nowe zadanie zostało dodane przez użytkownika!
+      </div>
+      <div id="problem-notification" style="display: none; background: #dc2626; color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+        <strong>Problem zgłoszony!</strong> Klient zgłosił problem ze zleceniem.
+        <a href="#" id="problem-link" style="color: white; text-decoration: underline;">Zobacz szczegóły</a>
+      </div>
       <section class="card">
         <% if (!jobs || jobs.length === 0) { %>
         <p>Brak zadań.</p>
@@ -137,5 +144,25 @@
         <% } %>
       </section>
     </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      socket.emit('joinAdmin');
+
+      socket.on('newJob', (jobData) => {
+        const notification = document.getElementById('notification');
+        notification.style.display = 'block';
+        setTimeout(() => {
+          notification.style.display = 'none';
+        }, 5000); // Hide after 5 seconds
+      });
+
+      socket.on('problemReport', (reportData) => {
+        const problemNotification = document.getElementById('problem-notification');
+        const problemLink = document.getElementById('problem-link');
+        problemLink.href = `/admin/jobs/${reportData.job_id}`;
+        problemNotification.style.display = 'block';
+      });
+    </script>
   </body>
   </html>

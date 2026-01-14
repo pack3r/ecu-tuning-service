@@ -65,6 +65,19 @@ db.serialize(() => {
     )`
   );
 
+  db.run(
+    `CREATE TABLE IF NOT EXISTS problem_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_id INTEGER NOT NULL,
+      reported_by INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      resolved_at DATETIME,
+      FOREIGN KEY (job_id) REFERENCES jobs(id),
+      FOREIGN KEY (reported_by) REFERENCES users(id)
+    )`
+  );
+
   // Add vehicle columns if they don't exist (for existing databases)
   // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we catch errors silently
   db.run(`ALTER TABLE jobs ADD COLUMN vehicle_make TEXT`, (err) => {
@@ -319,11 +332,20 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
       vehicle_year,
       ecu_controller,
     ],
-    (err) => {
+    function (err) {
       if (err) {
         console.error(err);
         return res.status(500).send('Database error');
       }
+      // Notify admins about new job via Socket.io
+      io.to('admin').emit('newJob', {
+        id: this.lastID,
+        user_id: req.session.user.id,
+        username: req.session.user.username,
+        original_filename: req.file.originalname,
+        created_at: new Date().toISOString()
+      });
+
       // After creating a job, go to the history page
       res.redirect('/jobs/history');
     }
@@ -418,13 +440,69 @@ app.get('/jobs/:id', requireAuth, (req, res) => {
   const jobId = req.params.id;
   const userId = req.session.user.id;
   db.get(
-    `SELECT * FROM jobs WHERE id = ? AND user_id = ?`,
+    `SELECT jobs.*, problem_reports.status AS problem_status
+     FROM jobs
+     LEFT JOIN problem_reports ON jobs.id = problem_reports.job_id AND problem_reports.status = 'open'
+     WHERE jobs.id = ? AND jobs.user_id = ?`,
     [jobId, userId],
     (err, job) => {
       if (err || !job) {
         return res.status(404).send('Job not found');
       }
+      job.hasOpenProblem = job.problem_status === 'open';
       res.render('jobs_detail', { job });
+    }
+  );
+});
+
+// Report problem with completed job
+app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
+  const jobId = req.params.id;
+  const userId = req.session.user.id;
+
+  // Check if job belongs to user and is completed
+  db.get(
+    `SELECT * FROM jobs WHERE id = ? AND user_id = ? AND status = 'completed'`,
+    [jobId, userId],
+    (err, job) => {
+      if (err || !job) {
+        return res.status(403).send('Nie możesz zgłosić problemu z tym zadaniem');
+      }
+
+      // Check if problem already reported
+      db.get(
+        `SELECT * FROM problem_reports WHERE job_id = ? AND status = 'open'`,
+        [jobId],
+        (err, existingReport) => {
+          if (existingReport) {
+            return res.redirect(`/jobs/${jobId}`);
+          }
+
+          // Create problem report
+          db.run(
+            `INSERT INTO problem_reports (job_id, reported_by, status) VALUES (?, ?, 'open')`,
+            [jobId, userId],
+            function (err) {
+              if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+              }
+
+              // Notify admins about problem report
+              io.to('admin').emit('problemReport', {
+                id: this.lastID,
+                job_id: jobId,
+                reported_by: userId,
+                username: req.session.user.username,
+                original_filename: job.original_filename,
+                created_at: new Date().toISOString()
+              });
+
+              res.redirect(`/jobs/${jobId}`);
+            }
+          );
+        }
+      );
     }
   );
 });
@@ -497,9 +575,10 @@ app.get('/admin/jobs', requireAdmin, (req, res) => {
 app.get('/admin/jobs/:id', requireAdmin, (req, res) => {
   const jobId = req.params.id;
   db.get(
-    `SELECT jobs.*, users.email AS user_email
+    `SELECT jobs.*, users.email AS user_email, problem_reports.status AS problem_status
      FROM jobs
      JOIN users ON jobs.user_id = users.id
+     LEFT JOIN problem_reports ON jobs.id = problem_reports.job_id AND problem_reports.status = 'open'
      WHERE jobs.id = ?`,
     [jobId],
     (err, job) => {
@@ -604,6 +683,39 @@ app.post('/admin/jobs/:id/update_message', requireAdmin, (req, res) => {
   db.run(
     `UPDATE jobs SET client_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
     [client_message, jobId],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Database error');
+      }
+      res.redirect(`/admin/jobs/${jobId}`);
+    }
+  );
+});
+
+// Admin reopen chat for problem resolution
+app.post('/admin/jobs/:id/reopen_chat', requireAdmin, (req, res) => {
+  const jobId = req.params.id;
+  // Check if there's an open problem report
+  db.get(
+    `SELECT * FROM problem_reports WHERE job_id = ? AND status = 'open'`,
+    [jobId],
+    (err, report) => {
+      if (err || !report) {
+        return res.status(404).send('No open problem report found');
+      }
+      // Reopen the chat by updating job status or just redirect - the chat logic will handle it
+      res.redirect(`/admin/jobs/${jobId}`);
+    }
+  );
+});
+
+// Admin close problem report
+app.post('/admin/jobs/:id/close_problem', requireAdmin, (req, res) => {
+  const jobId = req.params.id;
+  db.run(
+    `UPDATE problem_reports SET status = 'resolved', resolved_at = CURRENT_TIMESTAMP WHERE job_id = ? AND status = 'open'`,
+    [jobId],
     (err) => {
       if (err) {
         console.error(err);
@@ -740,6 +852,10 @@ io.on('connection', (socket) => {
 
   socket.on('joinJob', (jobId) => {
     socket.join(`job_${jobId}`);
+  });
+
+  socket.on('joinAdmin', () => {
+    socket.join('admin');
   });
 
   socket.on('disconnect', () => {

@@ -20,8 +20,6 @@
     </header>
 
     <main class="container">
-      <h1>Nowe zadanie</h1>
-
       <section class="card">
         <h2>Prześlij nowy plik</h2>
         <form method="post" action="/upload" enctype="multipart/form-data" class="aligned-form">
@@ -65,7 +63,7 @@
 
               <div class="form-group">
                 <label>Model pojazdu <span style="color: red;">*</span></label>
-                <input type="text" name="vehicle_model" placeholder="np. A4, 320d, C220" required />
+                <input type="text" name="vehicle_model" placeholder="np. A4, 320d, C220" autocomplete="off" required />
               </div>
             </div>
 

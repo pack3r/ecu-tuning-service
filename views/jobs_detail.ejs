@@ -78,8 +78,11 @@
               </div>
 
               <% if (job.processed_filename && job.status === 'completed') { %>
-              <div style="margin-top: 1rem;">
+              <div style="margin-top: 1rem; display: flex; gap: 1rem;">
                 <a href="/jobs/<%= job.id %>/download" class="btn btn-primary">Pobierz przetworzony plik</a>
+                <form method="post" action="/jobs/<%= job.id %>/report_problem" style="display: inline;">
+                  <button type="submit" class="btn" style="background: #dc2626; color: white;">Zgłoś problem</button>
+                </form>
               </div>
               <% } %>
             </div>
@@ -195,20 +198,29 @@
             });
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            // Check if client can send messages (only after admin sends first)
-            const canSend = messages.some(msg => msg.user_role === 'admin');
+            // Check if client can send messages
+            const jobCompleted = '<%= job.status %>' === 'completed';
+            const adminSentMessage = messages.some(msg => msg.user_role === 'admin');
+            const hasOpenProblem = <%= job.hasOpenProblem ? 'true' : 'false' %>;
+            const canSend = (adminSentMessage && !jobCompleted) || (jobCompleted && hasOpenProblem);
             const waitingMsg = document.getElementById('waiting-msg');
             if (canSend) {
               chatForm.style.display = 'flex';
               if (waitingMsg) waitingMsg.remove();
             } else {
               chatForm.style.display = 'none';
-              if (!waitingMsg) {
+              let message = '';
+              if (jobCompleted) {
+                message = 'Zadanie zostało zakończone - czat jest zamknięty';
+              } else if (!adminSentMessage) {
+                message = 'Czekaj na wiadomość od administratora';
+              }
+              if (message && !waitingMsg) {
                 const waitingDiv = document.createElement('div');
                 waitingDiv.id = 'waiting-msg';
-                waitingDiv.textContent = 'Czekaj na wiadomość od administratora';
+                waitingDiv.textContent = message;
                 waitingDiv.style.padding = '1rem';
-                waitingDiv.style.background = '#fef3c7';
+                waitingDiv.style.background = jobCompleted ? '#f3f4f6' : '#fef3c7';
                 waitingDiv.style.borderRadius = '0.5rem';
                 waitingDiv.style.textAlign = 'center';
                 waitingDiv.style.marginTop = '1rem';
