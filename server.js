@@ -70,7 +70,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       job_id INTEGER NOT NULL,
       reported_by INTEGER NOT NULL,
-      description TEXT NOT NULL,
+      description TEXT,
       status TEXT NOT NULL DEFAULT 'open',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       resolved_at DATETIME,
@@ -78,6 +78,13 @@ db.serialize(() => {
       FOREIGN KEY (reported_by) REFERENCES users(id)
     )`
   );
+
+  // Add description column if it doesn't exist (for existing databases)
+  db.run(`ALTER TABLE problem_reports ADD COLUMN description TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding description column:', err);
+    }
+  });
 
   // Add vehicle columns if they don't exist (for existing databases)
   // SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we catch errors silently
