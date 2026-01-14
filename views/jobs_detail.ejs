@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Szczegóły zlecenia #<%= job.id %> - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Serwis Plików</div>
+      <nav>
+        <a href="/home" class="btn">Panel główny</a>
+        <a href="/jobs/new" class="btn">Nowe zadanie</a>
+        <a href="/jobs/history" class="btn">Historia zadań</a>
+        <div class="phone-number">📞 +48 533 193 112</div>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Szczegóły zlecenia #<%= job.id %></h1>
+
+      <div class="card">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+          <!-- Basic Information -->
+          <div>
+            <h2 style="margin-top: 0;">Informacje podstawowe</h2>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; align-items: center;">
+              <strong>ID zadania:</strong>
+              <span><%= job.id %></span>
+
+              <strong>Status:</strong>
+              <span>
+                <%
+                const statusMap = {
+                  'pending': 'Oczekujące',
+                  'completed': 'Zakończone',
+                  'processing': 'W trakcie',
+                  'cancelled': 'Anulowane'
+                };
+                %>
+                <%= statusMap[job.status] || job.status %>
+              </span>
+
+              <strong>Data utworzenia:</strong>
+              <span><%= job.created_at %></span>
+
+              <strong>Ostatnia aktualizacja:</strong>
+              <span><%= job.updated_at %></span>
+            </div>
+          </div>
+
+          <!-- File Information -->
+          <div>
+            <h2 style="margin-top: 0;">Informacje o pliku</h2>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; align-items: center;">
+              <strong>Nazwa oryginalna:</strong>
+              <span><%= job.original_filename %></span>
+
+              <strong>Plik przetworzony:</strong>
+              <span><%= job.processed_filename ? 'Tak' : 'Nie' %></span>
+            </div>
+
+            <% if (job.processed_filename && job.status === 'completed') { %>
+            <div style="margin-top: 1rem;">
+              <a href="/jobs/<%= job.id %>/download" class="btn btn-primary">Pobierz przetworzony plik</a>
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Vehicle Information -->
+        <div style="margin-bottom: 2rem;">
+          <h2>Informacje o pojeździe</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+              <strong>Marka:</strong><br>
+              <%= job.vehicle_make || 'Nie podano' %>
+            </div>
+            <div style="padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+              <strong>Model:</strong><br>
+              <%= job.vehicle_model || 'Nie podano' %>
+            </div>
+            <div style="padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+              <strong>Rok produkcji:</strong><br>
+              <%= job.vehicle_year || 'Nie podano' %>
+            </div>
+            <div style="padding: 1rem; background: #f9fafb; border-radius: 0.5rem;">
+              <strong>Sterownik ECU:</strong><br>
+              <%= job.ecu_controller || 'Nie podano' %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tuning Options -->
+        <div style="margin-bottom: 2rem;">
+          <h2>Wybrane opcje tuningu</h2>
+          <%
+          const opts = JSON.parse(job.options || '{}');
+          const optionLabels = {
+            'dpf_off': 'Wyłączenie filtra cząstek stałych (DPF)',
+            'egr_off': 'Wyłączenie recyrkulacji spalin (EGR)',
+            'adblue_off': 'Wyłączenie systemu AdBlue/SCR',
+            'dtc_off': 'Wyłączenie kodów błędów DTC',
+            'immo_off': 'Wyłączenie immobilisera (IMMO)'
+          };
+          %>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <% Object.keys(optionLabels).forEach(function(key) { %>
+            <div class="<%= opts[key] ? 'option-selected' : 'option-not-selected' %>">
+              <strong><%= optionLabels[key] %></strong><br>
+              <span class="<%= opts[key] ? 'option-text-selected' : 'option-text-not-selected' %>">
+                <%= opts[key] ? '✓ Wybrane' : '✗ Nie wybrane' %>
+              </span>
+            </div>
+            <% }); %>
+          </div>
+
+          <% if (opts.dtc_codes) { %>
+          <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-radius: 0.5rem; border-left: 4px solid #d97706;">
+            <strong>Kody błędów DTC do wyłączenia:</strong><br>
+            <span style="font-family: monospace; background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem; display: inline-block;">
+              <%= opts.dtc_codes %>
+            </span>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- Notes -->
+        <% if (job.notes) { %>
+        <div style="margin-bottom: 2rem;">
+          <h2>Twoje notatki</h2>
+          <div style="padding: 1rem; background: #f3f4f6; border-radius: 0.5rem; border-left: 4px solid #6b7280;">
+            <%= job.notes.replace(/\n/g, '<br>') %>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Client Message -->
+        <% if (job.client_message) { %>
+        <div style="margin-bottom: 2rem;">
+          <h2>Wiadomość od administratora</h2>
+          <div style="padding: 1rem; background: #dcfce7; border-radius: 0.5rem; border-left: 4px solid #16a34a;">
+            <%= job.client_message.replace(/\n/g, '<br>') %>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: center; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+          <a href="/jobs/history" class="btn">← Powrót do historii zadań</a>
+        </div>
+      </div>
+    </main>
+  </body>
+  </html>

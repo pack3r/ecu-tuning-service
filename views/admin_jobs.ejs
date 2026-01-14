@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin - Zadania - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Panel administracyjny</div>
+      <nav>
+        <div class="phone-number">📞 +48 533 193 112</div>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Wszystkie zadania</h1>
+      <section class="card">
+        <% if (!jobs || jobs.length === 0) { %>
+        <p>Brak zadań.</p>
+        <% } else { %>
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">ID</th>
+              <th style="width: 150px;">Klient</th>
+              <th style="width: 200px;">Pojazd</th>
+              <th style="width: 150px;">Sterownik ECU</th>
+              <th style="width: 200px;">Plik oryginalny</th>
+              <th style="width: 250px;">Opcje</th>
+              <th style="width: 250px;">Notatki</th>
+              <th style="width: 100px;">Status</th>
+              <th style="width: 150px;">Utworzono</th>
+              <th style="width: 100px;">Szczegóły</th>
+              <th style="width: 100px;">Oryginalny</th>
+              <th style="width: 150px;">Przetworzony</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% 
+            function translateStatus(status) {
+              const statusMap = {
+                'pending': 'Oczekujące',
+                'completed': 'Zakończone',
+                'processing': 'W trakcie',
+                'cancelled': 'Anulowane'
+              };
+              return statusMap[status] || status;
+            }
+            %>
+            <% jobs.forEach(function(job) { %>
+            <tr>
+              <td><%= job.id %></td>
+              <td><%= job.user_email %></td>
+              <td>
+                <% if (job.vehicle_make && job.vehicle_model && job.vehicle_year) { %>
+                <%= job.vehicle_make %> <%= job.vehicle_model %> (<%= job.vehicle_year %>)
+                <% } else { %>
+                <span style="color: #9ca3af;">-</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (job.ecu_controller) { %>
+                <%= job.ecu_controller %>
+                <% } else { %>
+                <span style="color: #9ca3af;">-</span>
+                <% } %>
+              </td>
+              <td><%= job.original_filename %></td>
+              <td>
+                <%
+                const opts = JSON.parse(job.options || '{}');
+                const optionLabels = {
+                  'dpf_off': 'Wyłączenie DPF',
+                  'egr_off': 'Wyłączenie EGR',
+                  'adblue_off': 'Wyłączenie AdBlue',
+                  'dtc_off': 'Wyłączenie DTC',
+                  'immo_off': 'Wyłączenie IMMO'
+                };
+                %>
+                <ul class="options-list">
+                  <% Object.keys(opts).forEach(function(key) {
+                    if (key === 'dtc_codes' && opts[key]) { %>
+                  <li><strong>Kody błędów DTC:</strong> <%= opts[key] %></li>
+                  <% } else if (opts[key] && key !== 'dtc_codes') { %>
+                  <li><%= optionLabels[key] || key %></li>
+                  <% }
+                  }); %>
+                </ul>
+              </td>
+              <td>
+                <% if (job.notes) { %>
+                <%= job.notes %>
+                <% } else { %>
+                <span style="color: #9ca3af;">Brak notatek</span>
+                <% } %>
+              </td>
+              <td><%= translateStatus(job.status) %></td>
+              <td>
+                <%= job.created_at %>
+                <%
+                const created = new Date(job.created_at);
+                const updated = new Date(job.updated_at);
+                const diffMs = updated - created;
+                const diffMins = Math.floor(diffMs / 60000);
+                if (diffMins > 1) {
+                %>
+                <span style="color: #059669; font-size: 0.7rem; margin-left: 0.25rem;">(edytowane)</span>
+                <%
+                }
+                %>
+              </td>
+              <td>
+                <a href="/admin/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a>
+              </td>
+              <td>
+                <a href="/admin/jobs/<%= job.id %>/original" class="btn-sm">Pobierz</a>
+              </td>
+              <td>
+                <% if (job.processed_filename) { %>
+                <span>Przesłano</span>
+                <% } %>
+                <form method="post" action="/admin/jobs/<%= job.id %>/complete" enctype="multipart/form-data">
+                  <input type="file" name="processed_file" required />
+                  <button type="submit" class="btn-sm">Prześlij</button>
+                </form>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        <% } %>
+      </section>
+    </main>
+  </body>
+  </html>

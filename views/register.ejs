@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Rejestracja - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Serwis Plików</div>
+      <nav>
+        <a href="/login" class="btn">Zaloguj się</a>
+        <div class="phone-number">📞 +48 533 193 112</div>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Utwórz konto</h1>
+      <% if (error) { %>
+      <div class="alert"><%= error %></div>
+      <% } %>
+      <form method="post" action="/register" class="card">
+        <label>Email</label>
+        <input type="email" name="email" required />
+
+        <label>Hasło</label>
+        <input type="password" name="password" required />
+
+        <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+      </form>
+    </main>
+  </body>
+  </html>

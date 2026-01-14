@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard - File Tuning Service</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">File Tuning Service</div>
+      <nav>
+        <a href="#new-task" class="btn">New task</a>
+        <a href="#task-history" class="btn">Task history</a>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Logout</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Your jobs</h1>
+
+    <section id="new-task" class="card">
+        <h2>Upload new file</h2>
+        <form method="post" action="/upload" enctype="multipart/form-data">
+          <label>File</label>
+          <input type="file" name="file" required />
+
+          <fieldset>
+            <legend>Options</legend>
+            <label><input type="checkbox" name="dpf_off" /> DPF off</label>
+            <label><input type="checkbox" name="egr_off" /> EGR off</label>
+            <label><input type="checkbox" name="adblue_off" /> AdBlue off</label>
+            <label><input type="checkbox" name="dtc_off" /> DTC off</label>
+            <label><input type="checkbox" name="immo_off" /> IMMO off</label>
+          </fieldset>
+
+          <label>Notes (optional)</label>
+          <textarea name="notes" rows="3"></textarea>
+
+          <button type="submit" class="btn btn-primary">Send file</button>
+        </form>
+      </section>
+
+    <section id="task-history" class="card">
+        <h2>History</h2>
+        <% if (!jobs || jobs.length === 0) { %>
+        <p>No jobs yet.</p>
+        <% } else { %>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Original file</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% jobs.forEach(function(job) { %>
+            <tr>
+              <td><%= job.id %></td>
+              <td><%= job.original_filename %></td>
+              <td><%= job.status %></td>
+              <td><%= job.created_at %></td>
+              <td>
+                <% if (job.processed_filename) { %>
+                <a href="/jobs/<%= job.id %>/download" class="btn-sm">Download</a>
+                <% } else { %>
+                <span>-</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        <% } %>
+      </section>
+    </main>
+  </body>
+  </html>
+

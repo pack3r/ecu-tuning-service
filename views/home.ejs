@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Witamy - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Serwis Plików</div>
+      <nav>
+        <a href="/home" class="btn">Panel główny</a>
+        <a href="/jobs/new" class="btn">Nowe zadanie</a>
+        <a href="/jobs/history" class="btn">Historia zadań</a>
+        <div class="phone-number">📞 +48 533 193 112</div>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="hero" style="text-align: center;">
+        <h1>Witamy w naszym systemie tuningowym</h1>
+        <p>Proszę wybrać co chcesz zrobić.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+          <a href="/jobs/new" class="btn btn-primary">Nowe zadanie</a>
+          <a href="/jobs/history" class="btn btn-primary">Historia zadań</a>
+        </div>
+      </section>
+    </main>
+  </body>
+  </html>

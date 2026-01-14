@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edytuj zadanie - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Serwis Plików</div>
+      <nav>
+        <a href="/home" class="btn">Panel główny</a>
+        <a href="/jobs/new" class="btn">Nowe zadanie</a>
+        <a href="/jobs/history" class="btn">Historia zadań</a>
+        <div class="phone-number">📞 +48 533 193 112</div>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Edytuj zadanie #<%= job.id %></h1>
+
+      <section class="card">
+        <h2>Edytuj informacje</h2>
+        <form method="post" action="/jobs/<%= job.id %>/edit" class="aligned-form">
+          <fieldset>
+            <legend>Informacje o pojeździe</legend>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Marka pojazdu <span style="color: red;">*</span></label>
+                <select name="vehicle_make" required>
+                  <option value="">-- Wybierz markę --</option>
+                  <option value="Audi" <%= job.vehicle_make === 'Audi' ? 'selected' : '' %>>Audi</option>
+                  <option value="BMW" <%= job.vehicle_make === 'BMW' ? 'selected' : '' %>>BMW</option>
+                  <option value="Citroen" <%= job.vehicle_make === 'Citroen' ? 'selected' : '' %>>Citroen</option>
+                  <option value="Fiat" <%= job.vehicle_make === 'Fiat' ? 'selected' : '' %>>Fiat</option>
+                  <option value="Ford" <%= job.vehicle_make === 'Ford' ? 'selected' : '' %>>Ford</option>
+                  <option value="Honda" <%= job.vehicle_make === 'Honda' ? 'selected' : '' %>>Honda</option>
+                  <option value="Hyundai" <%= job.vehicle_make === 'Hyundai' ? 'selected' : '' %>>Hyundai</option>
+                  <option value="Jaguar" <%= job.vehicle_make === 'Jaguar' ? 'selected' : '' %>>Jaguar</option>
+                  <option value="Kia" <%= job.vehicle_make === 'Kia' ? 'selected' : '' %>>Kia</option>
+                  <option value="Land Rover" <%= job.vehicle_make === 'Land Rover' ? 'selected' : '' %>>Land Rover</option>
+                  <option value="Mazda" <%= job.vehicle_make === 'Mazda' ? 'selected' : '' %>>Mazda</option>
+                  <option value="Mercedes-Benz" <%= job.vehicle_make === 'Mercedes-Benz' ? 'selected' : '' %>>Mercedes-Benz</option>
+                  <option value="Nissan" <%= job.vehicle_make === 'Nissan' ? 'selected' : '' %>>Nissan</option>
+                  <option value="Opel" <%= job.vehicle_make === 'Opel' ? 'selected' : '' %>>Opel</option>
+                  <option value="Peugeot" <%= job.vehicle_make === 'Peugeot' ? 'selected' : '' %>>Peugeot</option>
+                  <option value="Porsche" <%= job.vehicle_make === 'Porsche' ? 'selected' : '' %>>Porsche</option>
+                  <option value="Renault" <%= job.vehicle_make === 'Renault' ? 'selected' : '' %>>Renault</option>
+                  <option value="Seat" <%= job.vehicle_make === 'Seat' ? 'selected' : '' %>>Seat</option>
+                  <option value="Skoda" <%= job.vehicle_make === 'Skoda' ? 'selected' : '' %>>Skoda</option>
+                  <option value="Toyota" <%= job.vehicle_make === 'Toyota' ? 'selected' : '' %>>Toyota</option>
+                  <option value="Volvo" <%= job.vehicle_make === 'Volvo' ? 'selected' : '' %>>Volvo</option>
+                  <option value="Volkswagen" <%= job.vehicle_make === 'Volkswagen' ? 'selected' : '' %>>Volkswagen</option>
+                  <option value="Inna" <%= job.vehicle_make === 'Inna' ? 'selected' : '' %>>Inna</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Model pojazdu <span style="color: red;">*</span></label>
+                <input type="text" name="vehicle_model" placeholder="np. A4, 320d, C220" value="<%= job.vehicle_model || '' %>" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Rok produkcji <span style="color: red;">*</span></label>
+                <select name="vehicle_year" required>
+                  <option value="">-- Wybierz rok --</option>
+                  <% for (let year = 2024; year >= 1990; year--) { %>
+                  <option value="<%= year %>" <%= job.vehicle_year == year ? 'selected' : '' %>><%= year %></option>
+                  <% } %>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Sterownik ECU <span style="color: red;">*</span></label>
+                <input type="text" name="ecu_controller" placeholder="np. Bosch EDC17C70, Continental SID812, Delphi DCM6.2" value="<%= job.ecu_controller || '' %>" required />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Opcje</legend>
+            <%
+            const opts = JSON.parse(job.options || '{}');
+            %>
+            <label><input type="checkbox" name="dpf_off" <%= opts.dpf_off ? 'checked' : '' %> /> Wyłączenie DPF</label>
+            <label><input type="checkbox" name="egr_off" <%= opts.egr_off ? 'checked' : '' %> /> Wyłączenie EGR</label>
+            <label><input type="checkbox" name="adblue_off" <%= opts.adblue_off ? 'checked' : '' %> /> Wyłączenie AdBlue</label>
+            <label><input type="checkbox" name="dtc_off" id="dtc_off" <%= opts.dtc_off ? 'checked' : '' %> /> Wyłączenie DTC</label>
+            <label><input type="checkbox" name="immo_off" <%= opts.immo_off ? 'checked' : '' %> /> Wyłączenie IMMO</label>
+          </fieldset>
+
+          <div id="dtc_codes_container" class="<%= opts.dtc_off ? 'dtc-visible' : 'dtc-hidden' %>" style="margin-top: 1rem;">
+            <div class="form-group">
+              <label>Kody błędów DTC (np. P2425, P0401, oddzielone przecinkami) <span style="color: red;">*</span></label>
+              <input type="text" name="dtc_codes" id="dtc_codes" placeholder="P2425, P0401, P0402" value="<%= opts.dtc_codes || '' %>" />
+              <div id="dtc_error" style="display: none; color: #b91c1c; font-size: 0.9rem; margin-top: 0.25rem;">To pole nie może być puste gdy zaznaczone jest wyłączenie DTC</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Notatki (opcjonalnie)</label>
+            <textarea name="notes" rows="3"><%= job.notes || '' %></textarea>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+            <a href="/jobs/history" class="btn">Anuluj</a>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script>
+      const dtcCheckbox = document.getElementById('dtc_off');
+      const container = document.getElementById('dtc_codes_container');
+      const input = document.getElementById('dtc_codes');
+      const errorMsg = document.getElementById('dtc_error');
+      const form = document.querySelector('form');
+
+      function validateDtcField() {
+        if (dtcCheckbox.checked) {
+          if (!input.value.trim()) {
+            errorMsg.style.display = 'block';
+            input.style.borderColor = '#b91c1c';
+            return false;
+          } else {
+            errorMsg.style.display = 'none';
+            input.style.borderColor = '#d1d5db';
+            return true;
+          }
+        } else {
+          errorMsg.style.display = 'none';
+          input.style.borderColor = '#d1d5db';
+          return true;
+        }
+      }
+
+      dtcCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          container.style.display = 'block';
+          input.focus();
+        } else {
+          container.style.display = 'none';
+          input.value = '';
+          errorMsg.style.display = 'none';
+          input.style.borderColor = '#d1d5db';
+        }
+      });
+
+      input.addEventListener('input', function() {
+        if (dtcCheckbox.checked) {
+          validateDtcField();
+        }
+      });
+
+      form.addEventListener('submit', function(e) {
+        if (dtcCheckbox.checked && !input.value.trim()) {
+          e.preventDefault();
+          validateDtcField();
+          input.focus();
+          return false;
+        }
+      });
+    </script>
+  </body>
+  </html>
