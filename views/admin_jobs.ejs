@@ -10,6 +10,7 @@
       <div class="logo">Panel administracyjny</div>
       <nav>
         <a href="/admin/jobs" class="btn">Zadania</a>
+        <a href="/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
         <a href="/admin/users" class="btn">Użytkownicy</a>
         <div class="phone-number">📞 +48 533 193 112</div>
         <form method="post" action="/logout">
@@ -174,17 +175,30 @@
       });
 
       // Check for open problems on page load and keep notifications visible
-      fetch('/api/admin/open-problems')
-        .then(res => res.json())
-        .then(problems => {
-          if (problems.length > 0) {
-            const problemNotification = document.getElementById('problem-notification');
-            const problemLink = document.getElementById('problem-link');
-            problemLink.href = `/admin/jobs/${problems[0].job_id}`;
-            problemNotification.style.display = 'block';
-          }
-        })
-        .catch(err => console.error('Error checking open problems:', err));
+      function checkProblems() {
+        fetch('/api/admin/open-problems')
+          .then(res => res.json())
+          .then(problems => {
+            const complaintsBtn = document.getElementById('complaints-btn');
+            if (problems.length > 0) {
+              complaintsBtn.style.backgroundColor = '#dc2626';
+              complaintsBtn.style.color = 'white';
+              complaintsBtn.style.border = '2px solid #dc2626';
+
+              const problemNotification = document.getElementById('problem-notification');
+              const problemLink = document.getElementById('problem-link');
+              problemLink.href = `/admin/jobs/${problems[0].job_id}`;
+              problemNotification.style.display = 'block';
+            } else {
+              complaintsBtn.style.backgroundColor = '#e5e7eb';
+              complaintsBtn.style.color = '#111827';
+              complaintsBtn.style.border = 'none';
+            }
+          })
+          .catch(err => console.error('Error checking open problems:', err));
+      }
+
+      checkProblems();
     </script>
   </body>
   </html>

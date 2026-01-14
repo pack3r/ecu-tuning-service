@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin - Reklamacje - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Panel administracyjny</div>
+      <nav>
+        <a href="/admin/jobs" class="btn">Zadania</a>
+        <a href="/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
+        <a href="/admin/users" class="btn">Użytkownicy</a>
+        <div class="phone-number">📞 +48 533 193 112</div>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Zgłoszone reklamacje</h1>
+
+      <section class="card">
+        <% if (!problems || problems.length === 0) { %>
+        <p>Brak otwartych reklamacji.</p>
+        <% } else { %>
+        <div style="margin-bottom: 2rem;">
+          <p><strong>Liczba otwartych reklamacji:</strong> <%= problems.length %></p>
+        </div>
+
+        <div class="complaints-list">
+          <% problems.forEach(function(problem) { %>
+          <div class="complaint-item" style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1rem; background: #fef2f2;">
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start;">
+              <div>
+                <h3 style="margin: 0 0 0.5rem 0; color: #dc2626;">Zgłoszenie #<%= problem.id %></h3>
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; align-items: center; margin-bottom: 1rem;">
+                  <strong>Zadanie ID:</strong>
+                  <span><%= problem.job_id %></span>
+
+                  <strong>Klient:</strong>
+                  <span><%= problem.username %></span>
+
+                  <strong>Pojazd:</strong>
+                  <span>
+                    <% if (problem.vehicle_make && problem.vehicle_model) { %>
+                    <%= problem.vehicle_make %> <%= problem.vehicle_model %>
+                    <% } else { %>
+                    Nie podano
+                    <% } %>
+                  </span>
+
+                  <strong>Plik:</strong>
+                  <span><%= problem.original_filename %></span>
+
+                  <strong>Data zgłoszenia:</strong>
+                  <span><%= problem.created_at %></span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="/admin/jobs/<%= problem.job_id %>" class="btn btn-primary" style="text-align: center;">Zobacz szczegóły</a>
+              </div>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } %>
+      </section>
+    </main>
+  </body>
+  </html>
