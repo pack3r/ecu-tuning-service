@@ -20,6 +20,9 @@
       <div class="alert"><%= error %></div>
       <% } %>
       <form method="post" action="/register" class="card">
+        <label>Nazwa użytkownika</label>
+        <input type="text" name="username" required />
+
         <label>Email</label>
         <input type="email" name="email" required />
 

@@ -165,6 +165,18 @@
           </form>
         </div>
 
+        <!-- Chat -->
+        <div style="margin-bottom: 2rem;">
+          <h2>Czat</h2>
+          <div id="chat-messages" style="border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 1rem; height: 200px; overflow-y: auto; background: #f9fafb; margin-bottom: 1rem;">
+            <!-- Messages will be loaded here -->
+          </div>
+          <form id="chat-form" style="display: flex; gap: 0.5rem;">
+            <input type="text" id="chat-input" placeholder="Wpisz wiadomość..." style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" required />
+            <button type="submit" class="btn btn-primary">Wyślij</button>
+          </form>
+        </div>
+
         <!-- Upload Processed File -->
         <% if (!job.processed_filename) { %>
         <div style="margin-bottom: 2rem;">
@@ -191,5 +203,55 @@
         </div>
       </div>
     </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const jobId = <%= job.id %>;
+      const chatMessages = document.getElementById('chat-messages');
+      const chatForm = document.getElementById('chat-form');
+      const chatInput = document.getElementById('chat-input');
+
+      socket.emit('joinJob', jobId);
+
+      function loadMessages() {
+        fetch(`/api/jobs/${jobId}/messages`)
+          .then(res => res.json())
+          .then(messages => {
+            chatMessages.innerHTML = '';
+            messages.forEach(msg => {
+              const div = document.createElement('div');
+              div.style.marginBottom = '0.5rem';
+              div.style.padding = '0.5rem';
+              div.style.borderRadius = '0.375rem';
+              div.style.background = msg.user_role === 'admin' ? '#e0f2fe' : '#f3f4f6';
+              div.innerHTML = '<strong style="color: ' + (msg.user_role === 'admin' ? 'red' : 'darkblue') + ';">' + msg.user_name + ':</strong> ' + msg.message;
+              chatMessages.appendChild(div);
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          });
+      }
+
+      loadMessages();
+
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (message) {
+          fetch(`/api/jobs/${jobId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+          })
+          .then(res => res.json())
+          .then(data => {
+            chatInput.value = '';
+          });
+        }
+      });
+
+      socket.on('newMessage', (message) => {
+        loadMessages();
+      });
+    </script>
   </body>
   </html>

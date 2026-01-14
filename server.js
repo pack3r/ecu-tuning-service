@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +28,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      username TEXT UNIQUE NOT NULL,
       role TEXT NOT NULL DEFAULT 'client'
     )`
   );
@@ -46,6 +49,18 @@ db.serialize(() => {
       ecu_controller TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`
+  );
+
+  db.run(
+    `CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      message TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (job_id) REFERENCES jobs(id),
       FOREIGN KEY (user_id) REFERENCES users(id)
     )`
   );
@@ -78,6 +93,12 @@ db.serialize(() => {
     }
   });
 
+  db.run(`ALTER TABLE users ADD COLUMN username TEXT UNIQUE`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding username column:', err);
+    }
+  });
+
   // Create default admin if not exists
   db.get(`SELECT * FROM users WHERE role = 'admin' LIMIT 1`, (err, row) => {
     if (err) {
@@ -86,11 +107,12 @@ db.serialize(() => {
     }
     if (!row) {
       const email = 'admin@example.com';
+      const username = 'admin';
       const password = 'admin123';
       const hash = bcrypt.hashSync(password, 10);
       db.run(
-        `INSERT INTO users (email, password_hash, role) VALUES (?, ?, 'admin')`,
-        [email, hash],
+        `INSERT INTO users (email, password_hash, username, role) VALUES (?, ?, ?, 'admin')`,
+        [email, hash, username],
         (insertErr) => {
           if (insertErr) {
             console.error('Error creating default admin', insertErr);
@@ -101,6 +123,13 @@ db.serialize(() => {
       );
     }
   });
+
+  // Update existing users without username
+  db.run(`UPDATE users SET username = email WHERE username IS NULL`, (err) => {
+    if (err) {
+      console.error('Error updating usernames:', err);
+    }
+  });
 });
 
 // View engine and middleware
@@ -108,6 +137,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(
   session({
@@ -171,20 +201,20 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.render('register', { error: 'Email i hasło są wymagane.' });
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.render('register', { error: 'Nazwa użytkownika, email i hasło są wymagane.' });
   }
   const hash = bcrypt.hashSync(password, 10);
   db.run(
-    `INSERT INTO users (email, password_hash, role) VALUES (?, ?, 'client')`,
-    [email, hash],
+    `INSERT INTO users (email, password_hash, username, role) VALUES (?, ?, ?, 'client')`,
+    [email, hash, username],
     function (err) {
       if (err) {
         console.error(err);
-        return res.render('register', { error: 'Email jest już w użyciu lub wystąpił błąd.' });
+        return res.render('register', { error: 'Email lub nazwa użytkownika jest już w użyciu lub wystąpił błąd.' });
       }
-      req.session.user = { id: this.lastID, email, role: 'client' };
+      req.session.user = { id: this.lastID, email, username, role: 'client' };
       // After registration, show the welcome page
       res.redirect('/home');
     }
@@ -208,7 +238,7 @@ app.post('/login', (req, res) => {
     if (!valid) {
       return res.render('login', { error: 'Nieprawidłowe dane logowania.' });
     }
-    req.session.user = { id: user.id, email: user.email, role: user.role };
+    req.session.user = { id: user.id, email: user.email, username: user.username, role: user.role };
     if (user.role === 'admin') {
       return res.redirect('/admin/jobs');
     }
@@ -575,6 +605,139 @@ app.post('/admin/jobs/:id/update_message', requireAdmin, (req, res) => {
   );
 });
 
-app.listen(PORT, () => {
+// Admin users list
+app.get('/admin/users', requireAdmin, (req, res) => {
+  db.all(`SELECT id, username, email, role FROM users ORDER BY username`, (err, users) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Database error');
+    }
+    res.render('admin_users', { users });
+  });
+});
+
+// Admin edit user
+app.get('/admin/users/:id/edit', requireAdmin, (req, res) => {
+  db.get(`SELECT id, username, email, role FROM users WHERE id = ?`, [req.params.id], (err, user) => {
+    if (err || !user) {
+      return res.status(404).send('User not found');
+    }
+    res.render('admin_user_edit', { user });
+  });
+});
+
+// Admin update user
+app.post('/admin/users/:id/edit', requireAdmin, (req, res) => {
+  const { username, email, role } = req.body;
+  if (!username || !email || !role) {
+    return res.status(400).send('All fields required');
+  }
+  db.run(
+    `UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?`,
+    [username, email, role, req.params.id],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Database error');
+      }
+      res.redirect('/admin/users');
+    }
+  );
+});
+
+// Get messages for job
+app.get('/api/jobs/:id/messages', requireAuth, (req, res) => {
+  const jobId = req.params.id;
+  const userId = req.session.user.id;
+  // Check if user owns the job or is admin
+  const query = req.session.user.role === 'admin'
+    ? `SELECT * FROM jobs WHERE id = ?`
+    : `SELECT * FROM jobs WHERE id = ? AND user_id = ?`;
+  const params = req.session.user.role === 'admin' ? [jobId] : [jobId, userId];
+
+  db.get(query, params, (err, job) => {
+    if (err || !job) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    db.all(
+      `SELECT messages.*, users.username AS user_name, users.role AS user_role
+       FROM messages
+       JOIN users ON messages.user_id = users.id
+       WHERE messages.job_id = ?
+       ORDER BY messages.created_at ASC`,
+      [jobId],
+      (err, messages) => {
+        if (err) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+        res.json(messages);
+      }
+    );
+  });
+});
+
+// Post message
+app.post('/api/jobs/:id/messages', requireAuth, (req, res) => {
+  const jobId = req.params.id;
+  const userId = req.session.user.id;
+  const message = req.body.message;
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  // Check if user owns the job or is admin
+  const query = req.session.user.role === 'admin'
+    ? `SELECT * FROM jobs WHERE id = ?`
+    : `SELECT * FROM jobs WHERE id = ? AND user_id = ?`;
+  const params = req.session.user.role === 'admin' ? [jobId] : [jobId, userId];
+
+  db.get(query, params, (err, job) => {
+    if (err || !job) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    db.run(
+      `INSERT INTO messages (job_id, user_id, message) VALUES (?, ?, ?)`,
+      [jobId, userId, message.trim()],
+      function (err) {
+        if (err) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+        // Get the inserted message with user info
+        db.get(
+          `SELECT messages.*, users.username AS user_name, users.role AS user_role
+           FROM messages
+           JOIN users ON messages.user_id = users.id
+           WHERE messages.id = ?`,
+          [this.lastID],
+          (err, msg) => {
+            if (err) {
+              return res.status(500).json({ error: 'Database error' });
+            }
+            // Emit to room
+            io.to(`job_${jobId}`).emit('newMessage', msg);
+            res.json(msg);
+          }
+        );
+      }
+    );
+  });
+});
+
+const server = http.createServer(app);
+const io = socketIo(server);
+
+io.on('connection', (socket) => {
+  console.log('User connected');
+
+  socket.on('joinJob', (jobId) => {
+    socket.join(`job_${jobId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

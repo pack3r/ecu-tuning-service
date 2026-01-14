@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edytuj użytkownika - Admin - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Panel administracyjny</div>
+      <nav>
+        <a href="/admin/jobs" class="btn">Zadania</a>
+        <a href="/admin/users" class="btn">Użytkownicy</a>
+        <div class="phone-number">📞 +48 533 193 112</div>
+        <form method="post" action="/logout">
+          <button type="submit" class="btn">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>Edytuj użytkownika #<%= user.id %></h1>
+      <form method="post" action="/admin/users/<%= user.id %>/edit" class="card">
+        <label>Nazwa użytkownika</label>
+        <input type="text" name="username" value="<%= user.username %>" required />
+
+        <label>Email</label>
+        <input type="email" name="email" value="<%= user.email %>" required />
+
+        <label>Rola</label>
+        <select name="role" required>
+          <option value="client" <%= user.role === 'client' ? 'selected' : '' %>>Klient</option>
+          <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Administrator</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+      </form>
+      <a href="/admin/users" class="btn">← Powrót do listy użytkowników</a>
+    </main>
+  </body>
+  </html>

@@ -74,6 +74,7 @@ label {
 
 input[type='email'],
 input[type='password'],
+input[type='text'],
 input[type='file'],
 textarea {
   width: 100%;
@@ -244,6 +245,15 @@ button {
   font-weight: 500;
   color: #374151;
   font-size: 0.9rem;
+}
+
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  background: white;
 }
 
 .form-group input,
