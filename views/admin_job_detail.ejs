@@ -185,6 +185,16 @@
           </form>
         </div>
 
+        <!-- Problem Report -->
+        <% if (job.problem_status === 'open') { %>
+        <div style="margin-bottom: 2rem;">
+          <h2>Zgłoszony problem</h2>
+          <div style="padding: 1rem; background: #fef2f2; border-radius: 0.5rem; border-left: 4px solid #dc2626;">
+            <%= job.problem_description || 'Brak opisu problemu' %>
+          </div>
+        </div>
+        <% } %>
+
         <!-- Upload Processed File -->
         <% if (!job.processed_filename) { %>
         <div style="margin-bottom: 2rem;">

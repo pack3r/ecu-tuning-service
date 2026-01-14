@@ -70,6 +70,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       job_id INTEGER NOT NULL,
       reported_by INTEGER NOT NULL,
+      description TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'open',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       resolved_at DATETIME,
@@ -459,6 +460,11 @@ app.get('/jobs/:id', requireAuth, (req, res) => {
 app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
   const jobId = req.params.id;
   const userId = req.session.user.id;
+  const description = req.body.description;
+
+  if (!description || !description.trim()) {
+    return res.status(400).send('Opis problemu jest wymagany');
+  }
 
   // Check if job belongs to user and is completed
   db.get(
@@ -480,8 +486,8 @@ app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
 
           // Create problem report
           db.run(
-            `INSERT INTO problem_reports (job_id, reported_by, status) VALUES (?, ?, 'open')`,
-            [jobId, userId],
+            `INSERT INTO problem_reports (job_id, reported_by, description, status) VALUES (?, ?, ?, 'open')`,
+            [jobId, userId, description.trim()],
             function (err) {
               if (err) {
                 console.error(err);
@@ -495,6 +501,7 @@ app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
                 reported_by: userId,
                 username: req.session.user.username,
                 original_filename: job.original_filename,
+                description: description.trim(),
                 created_at: new Date().toISOString()
               });
 
@@ -575,7 +582,7 @@ app.get('/admin/jobs', requireAdmin, (req, res) => {
 app.get('/admin/jobs/:id', requireAdmin, (req, res) => {
   const jobId = req.params.id;
   db.get(
-    `SELECT jobs.*, users.email AS user_email, problem_reports.status AS problem_status
+    `SELECT jobs.*, users.email AS user_email, problem_reports.status AS problem_status, problem_reports.description AS problem_description
      FROM jobs
      JOIN users ON jobs.user_id = users.id
      LEFT JOIN problem_reports ON jobs.id = problem_reports.job_id AND problem_reports.status = 'open'
