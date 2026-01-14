@@ -163,6 +163,28 @@
         problemLink.href = `/admin/jobs/${reportData.job_id}`;
         problemNotification.style.display = 'block';
       });
+
+      socket.on('problemResolved', (data) => {
+        // Check if the resolved problem matches the current notification
+        const problemLink = document.getElementById('problem-link');
+        if (problemLink && problemLink.href.includes(`/admin/jobs/${data.job_id}`)) {
+          const problemNotification = document.getElementById('problem-notification');
+          problemNotification.style.display = 'none';
+        }
+      });
+
+      // Check for open problems on page load and keep notifications visible
+      fetch('/api/admin/open-problems')
+        .then(res => res.json())
+        .then(problems => {
+          if (problems.length > 0) {
+            const problemNotification = document.getElementById('problem-notification');
+            const problemLink = document.getElementById('problem-link');
+            problemLink.href = `/admin/jobs/${problems[0].job_id}`;
+            problemNotification.style.display = 'block';
+          }
+        })
+        .catch(err => console.error('Error checking open problems:', err));
     </script>
   </body>
   </html>

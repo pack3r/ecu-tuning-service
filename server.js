@@ -721,7 +721,28 @@ app.post('/admin/jobs/:id/close_problem', requireAdmin, (req, res) => {
         console.error(err);
         return res.status(500).send('Database error');
       }
+      // Notify all admins that problem is resolved
+      io.to('admin').emit('problemResolved', { job_id: jobId });
       res.redirect(`/admin/jobs/${jobId}`);
+    }
+  );
+});
+
+// Get open problem reports for admin
+app.get('/api/admin/open-problems', requireAdmin, (req, res) => {
+  db.all(
+    `SELECT problem_reports.*, jobs.original_filename, users.username
+     FROM problem_reports
+     JOIN jobs ON problem_reports.job_id = jobs.id
+     JOIN users ON problem_reports.reported_by = users.id
+     WHERE problem_reports.status = 'open'
+     ORDER BY problem_reports.created_at DESC`,
+    (err, problems) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json(problems);
     }
   );
 });
