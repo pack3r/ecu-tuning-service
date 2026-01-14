@@ -451,15 +451,24 @@ app.get('/jobs/:id/download', requireAuth, (req, res) => {
       if (opts.dpf_off) {
         suffix += '(DPF_OFF)';
       }
+      if (opts.egr_off) {
+        suffix += '(EGR_OFF)';
+      }
+      if (opts.adblue_off) {
+        suffix += '(AdBlue_OFF)';
+      }
       if (opts.dtc_off) {
-        suffix += `(DTC_P${opts.dtc_codes}_OFF)`;
+        suffix += `(DTC_${opts.dtc_codes}_OFF)`;
+      }
+      if (opts.immo_off) {
+        suffix += '(IMMO_OFF)';
       }
 
       // Split filename to insert suffix before extension
       const parts = job.original_filename.split('.');
-      const ext = parts.pop();
+      const ext = parts.length > 1 ? parts.pop() : '';
       const base = parts.join('.');
-      const downloadFilename = `processed_${base}${suffix}.${ext}`;
+      const downloadFilename = ext ? `${base}_processed${suffix}.${ext}` : `${base}_processed${suffix}`;
 
       res.download(filePath, downloadFilename);
     }
