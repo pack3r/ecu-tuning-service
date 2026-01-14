@@ -1,0 +1,66 @@
+VERSION: 2.0.0
+DATE: 2026-01-14
+
+CHANGELOG:
+
+=== VERSION 2.0.0 (2026-01-14) ===
+MAJOR FEATURES:
+- Complete problem reporting system for clients
+- Admin complaints management with dedicated page
+- Real-time notifications for admins (new jobs, problems)
+- Persistent red highlighting of complaints button
+- Chat system with conditional access based on job status
+
+DETAILED CHANGES:
+
+Authentication & User Management:
+- Added admin user creation (default: admin@example.com / admin123)
+- User registration and login system
+- Session-based authentication
+
+Job Management:
+- File upload with validation
+- Job status tracking (pending/completed/processing/cancelled)
+- Job editing for pending tasks
+- Vehicle information collection
+- ECU controller selection
+- Tuning options (DPF, EGR, AdBlue, DTC, IMMO)
+
+Admin Panel:
+- Admin dashboard with job management
+- User management (view/edit users)
+- File processing and completion
+- Job cancellation functionality
+
+Chat System:
+- Real-time messaging between clients and admins
+- Chat access control based on job status
+- Admin-initiated chat reopening for problem resolution
+
+Problem Reporting System:
+- Client problem reporting with required description
+- Modal form for problem submission
+- Admin notifications and red button highlighting
+- Dedicated complaints page with problem list
+- Problem resolution workflow
+- Persistent notifications until problems are resolved
+
+UI/UX Improvements:
+- Reorganized job details layout (chat left, info right)
+- Shortened tuning option labels
+- Phone number positioning adjustment
+- Form validation and error handling
+- Responsive design elements
+
+Technical Improvements:
+- SQLite database with proper schema
+- Socket.io for real-time features
+- File upload handling with multer
+- Session management
+- Input validation and sanitization
+
+=== VERSION 1.0.0 (Initial Release) ===
+- Basic file upload and job management system
+- Admin panel foundation
+- User authentication
+- Basic chat functionality
