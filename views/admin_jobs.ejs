@@ -50,7 +50,7 @@
             </tr>
           </thead>
           <tbody>
-            <% 
+            <%
             function translateStatus(status) {
               const statusMap = {
                 'pending': 'Oczekujące',
@@ -59,6 +59,16 @@
                 'cancelled': 'Anulowane'
               };
               return statusMap[status] || status;
+            }
+
+            function wrapFilename(filename, maxLength = 45) {
+              if (filename.length <= maxLength) return filename;
+              let result = '';
+              for (let i = 0; i < filename.length; i += maxLength) {
+                if (i > 0) result += '<br>';
+                result += filename.substr(i, maxLength);
+              }
+              return result;
             }
             %>
             <% jobs.forEach(function(job) { %>
@@ -79,7 +89,7 @@
                 <span style="color: #9ca3af;">-</span>
                 <% } %>
               </td>
-              <td><%= job.original_filename %></td>
+              <td><%= wrapFilename(job.original_filename, 45) %></td>
               <td>
                 <%
                 const opts = JSON.parse(job.options || '{}');
