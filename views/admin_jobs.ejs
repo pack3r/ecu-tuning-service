@@ -89,7 +89,7 @@
                 <span style="color: #9ca3af;">-</span>
                 <% } %>
               </td>
-              <td><%= wrapFilename(job.original_filename, 45) %></td>
+              <td style="max-width: 200px; word-break: break-word; white-space: normal;"><%= wrapFilename(job.original_filename, 50) %></td>
               <td>
                 <%
                 const opts = JSON.parse(job.options || '{}');
