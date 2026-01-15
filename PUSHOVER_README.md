@@ -22,10 +22,14 @@ Pushover to darmowa aplikacja do natychmiastowych powiadomień na telefon.
   - **Icon**: Opcjonalnie
 - Skopiuj **API Token** (to będzie `PUSHOVER_APP_TOKEN`)
 
-### 4. Skonfiguruj zmienne środowiskowe
-Na serwerze dodaj do pliku `.env` lub ustaw zmienne systemowe:
+### 4. Skonfiguruj plik .env
+Na serwerze w głównym katalogu aplikacji znajduje się plik `.env`. Zaktualizuj go:
 
 ```bash
+# Otwórz plik .env
+nano .env
+
+# Zaktualizuj zmienne:
 PUSHOVER_USER_KEY=your_user_key_here
 PUSHOVER_APP_TOKEN=your_app_token_here
 ```
