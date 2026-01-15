@@ -46,7 +46,6 @@
               <th style="width: 150px;">Utworzono</th>
               <th style="width: 100px;">Szczegóły</th>
               <th style="width: 100px;">Oryginalny</th>
-              <th style="width: 150px;">Przetworzony</th>
             </tr>
           </thead>
           <tbody>
@@ -138,15 +137,6 @@
               </td>
               <td>
                 <a href="/admin/jobs/<%= job.id %>/original" class="btn-sm">Pobierz</a>
-              </td>
-              <td>
-                <% if (job.processed_filename) { %>
-                <span>Przesłano</span>
-                <% } %>
-                <form method="post" action="/admin/jobs/<%= job.id %>/complete" enctype="multipart/form-data">
-                  <input type="file" name="processed_file" required />
-                  <button type="submit" class="btn-sm">Prześlij</button>
-                </form>
               </td>
             </tr>
             <% }); %>
