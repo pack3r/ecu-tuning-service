@@ -49,6 +49,8 @@ db.serialize(() => {
       notes TEXT,
       status TEXT NOT NULL DEFAULT 'pending',
       processed_filename TEXT,
+      corrected_filename TEXT,
+      file_version INTEGER DEFAULT 1,
       vehicle_make TEXT,
       vehicle_model TEXT,
       vehicle_year INTEGER,
@@ -123,6 +125,18 @@ db.serialize(() => {
   db.run(`ALTER TABLE users ADD COLUMN username TEXT UNIQUE`, (err) => {
     if (err && !err.message.includes('duplicate column')) {
       console.error('Error adding username column:', err);
+    }
+  });
+
+  // Add corrected_filename and file_version columns if they don't exist
+  db.run(`ALTER TABLE jobs ADD COLUMN corrected_filename TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding corrected_filename column:', err);
+    }
+  });
+  db.run(`ALTER TABLE jobs ADD COLUMN file_version INTEGER DEFAULT 1`, (err) => {
+    if (err && !err.message.includes('duplicate column')) {
+      console.error('Error adding file_version column:', err);
     }
   });
 
@@ -585,9 +599,12 @@ app.get('/jobs/:id/download', requireAuth, (req, res) => {
       if (!job.processed_filename) {
         return res.status(400).send('File not ready yet');
       }
-      const filePath = path.join(uploadDir, job.processed_filename);
 
-      // Build filename with suffixes
+      // Choose the latest file version (corrected if exists, otherwise processed)
+      const fileName = job.corrected_filename || job.processed_filename;
+      const filePath = path.join(uploadDir, fileName);
+
+      // Build filename with suffixes and version
       let suffix = '';
       const opts = JSON.parse(job.options || '{}');
       if (opts.dpf_off) {
@@ -606,11 +623,14 @@ app.get('/jobs/:id/download', requireAuth, (req, res) => {
         suffix += '(IMMO_OFF)';
       }
 
+      // Add version suffix if corrected file
+      const versionSuffix = job.corrected_filename ? `_v${job.file_version}` : '';
+
       // Split filename to insert suffix before extension
       const parts = job.original_filename.split('.');
       const ext = parts.length > 1 ? parts.pop() : '';
       const base = parts.join('.');
-      const downloadFilename = ext ? `${base}_processed${suffix}.${ext}` : `${base}_processed${suffix}`;
+      const downloadFilename = ext ? `${base}_processed${suffix}${versionSuffix}.${ext}` : `${base}_processed${suffix}${versionSuffix}`;
 
       res.download(filePath, downloadFilename);
     }
@@ -772,6 +792,47 @@ app.post('/admin/jobs/:id/reopen_chat', requireAdmin, (req, res) => {
       res.redirect(`/admin/jobs/${jobId}`);
     }
   );
+});
+
+// Admin upload corrected file for problem resolution
+const correctedUpload = upload.single('corrected_file');
+
+app.post('/admin/jobs/:id/upload_corrected', requireAdmin, (req, res) => {
+  correctedUpload(req, res, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(400).send('File upload error');
+    }
+    const jobId = req.params.id;
+    if (!req.file) {
+      return res.status(400).send('Corrected file is required');
+    }
+
+    // Get current file version and increment it
+    db.get(`SELECT file_version FROM jobs WHERE id = ?`, [jobId], (err, job) => {
+      if (err || !job) {
+        return res.status(404).send('Job not found');
+      }
+
+      const newVersion = (job.file_version || 1) + 1;
+
+      db.run(
+        `UPDATE jobs SET
+         corrected_filename = ?,
+         file_version = ?,
+         updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [req.file.filename, newVersion, jobId],
+        (updateErr) => {
+          if (updateErr) {
+            console.error(updateErr);
+            return res.status(500).send('Database error');
+          }
+          res.redirect(`/admin/jobs/${jobId}`);
+        }
+      );
+    });
+  });
 });
 
 // Admin close problem report

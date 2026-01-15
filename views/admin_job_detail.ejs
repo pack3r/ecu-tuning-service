@@ -210,7 +210,17 @@
         <% if (job.problem_status === 'open') { %>
         <div style="margin-bottom: 2rem;">
           <h2>Rozwiązywanie problemu</h2>
-          <p>Klient zgłosił problem ze zleceniem. Po przedyskutowaniu problemu w czacie, kliknij "Zakończ" aby zamknąć zgłoszenie problemu i ponownie zamknąć czat.</p>
+          <p>Klient zgłosił problem ze zleceniem. Możesz przesłać poprawioną wersję pliku lub po przedyskutowaniu problemu w czacie kliknąć "Zakończ".</p>
+
+          <h3>Prześlij poprawioną wersję pliku</h3>
+          <form method="post" action="/admin/jobs/<%= job.id %>/upload_corrected" enctype="multipart/form-data" style="margin-bottom: 1rem;">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <input type="file" name="corrected_file" required />
+              <button type="submit" class="btn btn-primary">Prześlij poprawiony plik</button>
+            </div>
+            <small style="color: #6b7280;">Aktualna wersja pliku: <%= job.file_version || 1 %></small>
+          </form>
+
           <form method="post" action="/admin/jobs/<%= job.id %>/close_problem" style="display: inline;">
             <button type="submit" class="btn" style="background: #16a34a; color: white;">Zakończ zgłoszenie problemu</button>
           </form>
