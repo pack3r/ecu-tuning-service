@@ -362,7 +362,12 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
 
       // Send Pushover notification
       if (process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_APP_TOKEN) {
+        console.log('Sending Pushover notification...');
         const pushoverMessage = `Nowe zadanie!\nUżytkownik: ${req.session.user.username}\nPlik: ${req.file.originalname}`;
+        console.log('Pushover message:', pushoverMessage);
+        console.log('User key exists:', !!process.env.PUSHOVER_USER_KEY);
+        console.log('App token exists:', !!process.env.PUSHOVER_APP_TOKEN);
+
         fetch('https://api.pushover.net/1/messages.json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -373,7 +378,14 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
             title: 'Nowe zadanie ECU',
             sound: 'pushover'
           })
+        }).then(response => {
+          console.log('Pushover response status:', response.status);
+          return response.text();
+        }).then(text => {
+          console.log('Pushover response:', text);
         }).catch(err => console.error('Pushover notification failed:', err));
+      } else {
+        console.log('Pushover not configured - missing environment variables');
       }
 
       // After creating a job, go to the history page
