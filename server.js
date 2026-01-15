@@ -354,6 +354,22 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
         created_at: new Date().toISOString()
       });
 
+      // Send Pushover notification
+      if (process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_APP_TOKEN) {
+        const pushoverMessage = `Nowe zadanie!\nUżytkownik: ${req.session.user.username}\nPlik: ${req.file.originalname}`;
+        fetch('https://api.pushover.net/1/messages.json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            token: process.env.PUSHOVER_APP_TOKEN,
+            user: process.env.PUSHOVER_USER_KEY,
+            message: pushoverMessage,
+            title: 'Nowe zadanie ECU',
+            sound: 'pushover'
+          })
+        }).catch(err => console.error('Pushover notification failed:', err));
+      }
+
       // After creating a job, go to the history page
       res.redirect('/jobs/history');
     }
@@ -511,6 +527,22 @@ app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
                 description: description.trim(),
                 created_at: new Date().toISOString()
               });
+
+              // Send Pushover notification for problem report
+              if (process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_APP_TOKEN) {
+                const pushoverMessage = `Zgłoszono problem!\nUżytkownik: ${req.session.user.username}\nPlik: ${job.original_filename}\nOpis: ${description.trim().substring(0, 200)}${description.trim().length > 200 ? '...' : ''}`;
+                fetch('https://api.pushover.net/1/messages.json', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: new URLSearchParams({
+                    token: process.env.PUSHOVER_APP_TOKEN,
+                    user: process.env.PUSHOVER_USER_KEY,
+                    message: pushoverMessage,
+                    title: 'Problem ze zleceniem ECU',
+                    sound: 'persistent'
+                  })
+                }).catch(err => console.error('Pushover notification failed:', err));
+              }
 
               res.redirect(`/jobs/${jobId}`);
             }
