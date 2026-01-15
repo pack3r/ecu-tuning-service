@@ -1,4 +1,8 @@
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch (error) {
+  console.warn('Warning: dotenv not loaded, using default environment variables');
+}
 
 const express = require('express');
 const session = require('express-session');
