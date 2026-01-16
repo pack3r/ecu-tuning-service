@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kółko i Krzyżyk - Serwis Plików</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+      .game-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .game-board {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 300px;
+        height: 300px;
+        margin: 2rem auto;
+      }
+
+      .game-cell {
+        width: 100%;
+        height: 100%;
+        border: 2px solid #333;
+        background: white;
+        font-size: 4rem;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s;
+      }
+
+      .game-cell:hover {
+        background-color: #f0f0f0;
+      }
+
+      .game-cell.occupied {
+        cursor: not-allowed;
+      }
+
+      .game-cell.occupied:hover {
+        background-color: white;
+      }
+
+      .game-status {
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 8px;
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .waiting-user {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .waiting-admin {
+        background-color: #fee2e2;
+        color: #dc2626;
+      }
+
+      .playing {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      .finished {
+        background-color: #e0e7ff;
+        color: #3730a3;
+      }
+
+      .reset-btn {
+        background: #dc2626;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 1rem;
+      }
+
+      .reset-btn:hover {
+        background: #b91c1c;
+      }
+
+      .reset-btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="logo">Serwis Plików</div>
+      <nav>
+        <% if (isAdmin) { %>
+          <a href="/admin/jobs" class="btn">Panel Administratora</a>
+        <% } else { %>
+          <a href="/jobs/new" class="btn">Nowe Zadanie</a>
+          <a href="/jobs/history" class="btn">Historia Zadań</a>
+        <% } %>
+        <a href="/home" class="btn">Strona Główna</a>
+        <form action="/logout" method="POST" style="display: inline;">
+          <button type="submit" class="btn btn-secondary">Wyloguj</button>
+        </form>
+      </nav>
+    </header>
+
+    <main class="container">
+      <div class="game-container">
+        <h1>Kółko i Krzyżyk</h1>
+        <p>Wspólna gra dla wszystkich użytkowników</p>
+
+        <div id="game-status" class="game-status waiting-user">
+          Ładowanie gry...
+        </div>
+
+        <div class="game-board" id="game-board">
+          <% for (let i = 0; i < 9; i++) { %>
+            <div class="game-cell" data-position="<%= i %>">
+              <%= game.board[i] || '' %>
+            </div>
+          <% } %>
+        </div>
+
+        <% if (isAdmin) { %>
+          <button id="reset-btn" class="reset-btn">Resetuj Grę</button>
+        <% } %>
+
+        <div style="margin-top: 2rem;">
+          <p><strong>Zasady:</strong></p>
+          <ul style="text-align: left; display: inline-block;">
+            <li>Użytkownicy grają jako <strong>X</strong></li>
+            <li>Administrator gra jako <strong>O</strong></li>
+            <li>Ruchy wykonywane są naprzemiennie</li>
+            <li>Pierwszeństwo mają użytkownicy</li>
+            <li>Gra kończy się gdy ktoś wygra lub będzie remis</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const socket = io();
+      const userIsAdmin = <%= isAdmin ? 'true' : 'false' %>;
+      let currentGame = <%- JSON.stringify(game) %>;
+
+      // Join game room
+      socket.emit('joinGame');
+
+      // Update game board
+      function updateBoard(board) {
+        for (let i = 0; i < 9; i++) {
+          const cell = document.querySelector(`[data-position="${i}"]`);
+          cell.textContent = board[i] || '';
+          if (board[i]) {
+            cell.classList.add('occupied');
+          } else {
+            cell.classList.remove('occupied');
+          }
+        }
+      }
+
+      // Update game status
+      function updateStatus(game) {
+        const statusDiv = document.getElementById('game-status');
+
+        if (game.game_status === 'finished') {
+          if (game.winner === 'draw') {
+            statusDiv.textContent = 'Remis!';
+            statusDiv.className = 'game-status finished';
+          } else if (game.winner === 'X') {
+            statusDiv.textContent = 'Użytkownicy wygrali! 🎉';
+            statusDiv.className = 'game-status finished';
+          } else if (game.winner === 'O') {
+            statusDiv.textContent = 'Administrator wygrał! 🎉';
+            statusDiv.className = 'game-status finished';
+          }
+        } else if (game.current_turn === 'user') {
+          if (userIsAdmin) {
+            statusDiv.textContent = 'Oczekiwanie na ruch użytkownika...';
+            statusDiv.className = 'game-status waiting-user';
+          } else {
+            statusDiv.textContent = 'Twój ruch! Kliknij na planszę.';
+            statusDiv.className = 'game-status playing';
+          }
+        } else if (game.current_turn === 'admin') {
+          if (userIsAdmin) {
+            statusDiv.textContent = 'Twój ruch! Kliknij na planszę.';
+            statusDiv.className = 'game-status playing';
+          } else {
+            statusDiv.textContent = 'Oczekiwanie na ruch administratora...';
+            statusDiv.className = 'game-status waiting-admin';
+          }
+        }
+      }
+
+      // Initialize game
+      updateBoard(currentGame.board);
+      updateStatus(currentGame);
+
+      // Handle cell clicks
+      document.querySelectorAll('.game-cell').forEach(cell => {
+        cell.addEventListener('click', async () => {
+          const position = parseInt(cell.dataset.position);
+
+          if (cell.classList.contains('occupied')) return;
+
+          try {
+            const response = await fetch('/api/game/move', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ position }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+              alert(result.error || 'Błąd wykonania ruchu');
+            }
+          } catch (error) {
+            console.error('Error making move:', error);
+            alert('Błąd wykonania ruchu');
+          }
+        });
+      });
+
+      // Handle reset button
+      if (userIsAdmin) {
+        document.getElementById('reset-btn').addEventListener('click', async () => {
+          if (!confirm('Czy na pewno chcesz zresetować grę?')) return;
+
+          try {
+            const response = await fetch('/api/game/reset', {
+              method: 'POST',
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+              alert(result.error || 'Błąd resetowania gry');
+            }
+          } catch (error) {
+            console.error('Error resetting game:', error);
+            alert('Błąd resetowania gry');
+          }
+        });
+      }
+
+      // Listen for game updates
+      socket.on('gameUpdate', (data) => {
+        currentGame = {
+          board: data.board,
+          current_turn: data.current_turn,
+          game_status: data.game_status,
+          winner: data.winner
+        };
+
+        updateBoard(data.board);
+        updateStatus(currentGame);
+      });
+
+      // Listen for game reset
+      socket.on('gameReset', (data) => {
+        currentGame = {
+          board: data.board,
+          current_turn: data.current_turn,
+          game_status: data.game_status,
+          winner: null
+        };
+
+        updateBoard(data.board);
+        updateStatus(currentGame);
+      });
+    </script>
+  </body>
+  </html>

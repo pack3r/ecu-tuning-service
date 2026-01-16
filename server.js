@@ -14,6 +14,7 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const http = require('http');
 const socketIo = require('socket.io');
+const APP_VERSION = require('./version');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -140,6 +141,43 @@ db.serialize(() => {
     }
   });
 
+  // Create tic-tac-toe game table
+  db.run(
+    `CREATE TABLE IF NOT EXISTS tic_tac_toe (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      board TEXT NOT NULL DEFAULT '["","","","","","","","",""]',
+      current_turn TEXT NOT NULL DEFAULT 'user',
+      game_status TEXT NOT NULL DEFAULT 'waiting',
+      last_move_by INTEGER,
+      last_move_at DATETIME,
+      winner TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (last_move_by) REFERENCES users(id)
+    )`
+  );
+
+  // Initialize game if not exists
+  db.get(`SELECT * FROM tic_tac_toe WHERE id = 1`, (err, game) => {
+    if (err) {
+      console.error('Error checking tic-tac-toe game:', err);
+      return;
+    }
+    if (!game) {
+      db.run(
+        `INSERT INTO tic_tac_toe (id, board, current_turn, game_status) VALUES (1, ?, 'user', 'waiting')`,
+        ['["","","","","","","","",""]'],
+        (insertErr) => {
+          if (insertErr) {
+            console.error('Error creating tic-tac-toe game:', insertErr);
+          } else {
+            console.log('Tic-tac-toe game initialized');
+          }
+        }
+      );
+    }
+  });
+
   // Create default admin if not exists
   db.get(`SELECT * FROM users WHERE role = 'admin' LIMIT 1`, (err, row) => {
     if (err) {
@@ -219,9 +257,10 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Expose user to views
+// Expose user and version to views
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
+  res.locals.appVersion = APP_VERSION;
   next();
 });
 
@@ -375,6 +414,8 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
       });
 
       // Send Pushover notification
+      console.log('PUSHOVER_USER_KEY:', process.env.PUSHOVER_USER_KEY);
+      console.log('PUSHOVER_APP_TOKEN:', process.env.PUSHOVER_APP_TOKEN);
       if (process.env.PUSHOVER_USER_KEY && process.env.PUSHOVER_APP_TOKEN) {
         console.log('Sending Pushover notification...');
         const pushoverMessage = `Nowe zadanie!\nUżytkownik: ${req.session.user.username}\nPlik: ${req.file.originalname}`;
@@ -931,6 +972,181 @@ app.post('/admin/users/:id/edit', requireAdmin, (req, res) => {
   );
 });
 
+// Tic-Tac-Toe routes
+app.get('/game', requireAuth, (req, res) => {
+  db.get(`SELECT * FROM tic_tac_toe WHERE id = 1`, (err, game) => {
+    if (err) {
+      console.error('Error getting game state:', err);
+      return res.status(500).send('Database error');
+    }
+    res.render('game', {
+      game: game || { board: ["","","","","","","","",""], current_turn: 'user', game_status: 'waiting' },
+      isAdmin: req.session.user.role === 'admin'
+    });
+  });
+});
+
+// Get current game state
+app.get('/api/game', requireAuth, (req, res) => {
+  db.get(`SELECT * FROM tic_tac_toe WHERE id = 1`, (err, game) => {
+    if (err) {
+      console.error('Error getting game state:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(game || { board: ["","","","","","","","",""], current_turn: 'user', game_status: 'waiting' });
+  });
+});
+
+// Make a move
+app.post('/api/game/move', requireAuth, (req, res) => {
+  const { position } = req.body;
+  const userId = req.session.user.id;
+  const isAdmin = req.session.user.role === 'admin';
+
+  if (position < 0 || position > 8) {
+    return res.status(400).json({ error: 'Invalid position' });
+  }
+
+  db.get(`SELECT * FROM tic_tac_toe WHERE id = 1`, (err, game) => {
+    if (err) {
+      console.error('Error getting game state:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    const currentGame = game || {
+      id: 1,
+      board: ["","","","","","","","",""],
+      current_turn: 'user',
+      game_status: 'waiting'
+    };
+
+    // Check if it's the correct player's turn
+    if (isAdmin && currentGame.current_turn !== 'admin') {
+      return res.status(400).json({ error: 'Not your turn' });
+    }
+    if (!isAdmin && currentGame.current_turn !== 'user') {
+      return res.status(400).json({ error: 'Not your turn' });
+    }
+
+    // Check if position is empty
+    if (currentGame.board[position] !== "") {
+      return res.status(400).json({ error: 'Position already taken' });
+    }
+
+    // Make the move
+    const newBoard = [...currentGame.board];
+    newBoard[position] = isAdmin ? 'O' : 'X';
+
+    // Check for winner
+    const winner = checkWinner(newBoard);
+    const nextTurn = winner ? null : (isAdmin ? 'user' : 'admin');
+    const gameStatus = winner ? 'finished' : (nextTurn ? 'playing' : 'finished');
+
+    // Update database
+    db.run(
+      `UPDATE tic_tac_toe SET
+        board = ?,
+        current_turn = ?,
+        game_status = ?,
+        last_move_by = ?,
+        last_move_at = CURRENT_TIMESTAMP,
+        winner = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1`,
+      [
+        JSON.stringify(newBoard),
+        nextTurn || currentGame.current_turn,
+        gameStatus,
+        userId,
+        winner,
+      ],
+      (updateErr) => {
+        if (updateErr) {
+          console.error('Error updating game:', updateErr);
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Emit game update to all connected users
+        io.emit('gameUpdate', {
+          board: newBoard,
+          current_turn: nextTurn,
+          game_status: gameStatus,
+          winner: winner,
+          last_move_by: userId,
+          last_move_position: position
+        });
+
+        res.json({
+          success: true,
+          board: newBoard,
+          current_turn: nextTurn,
+          game_status: gameStatus,
+          winner: winner
+        });
+      }
+    );
+  });
+});
+
+// Reset game
+app.post('/api/game/reset', requireAuth, (req, res) => {
+  // Only admin can reset the game
+  if (req.session.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Only admin can reset the game' });
+  }
+
+  db.run(
+    `UPDATE tic_tac_toe SET
+      board = ?,
+      current_turn = 'user',
+      game_status = 'waiting',
+      last_move_by = NULL,
+      last_move_at = NULL,
+      winner = NULL,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = 1`,
+    ['["","","","","","","","",""]'],
+    (err) => {
+      if (err) {
+        console.error('Error resetting game:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      // Emit game reset to all connected users
+      io.emit('gameReset', {
+        board: ["","","","","","","","",""],
+        current_turn: 'user',
+        game_status: 'waiting'
+      });
+
+      res.json({ success: true });
+    }
+  );
+});
+
+// Helper function to check for winner
+function checkWinner(board) {
+  const winningCombos = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+    [0, 4, 8], [2, 4, 6] // diagonals
+  ];
+
+  for (const combo of winningCombos) {
+    const [a, b, c] = combo;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
+    }
+  }
+
+  // Check for draw
+  if (board.every(cell => cell !== "")) {
+    return 'draw';
+  }
+
+  return null;
+}
+
 // Get messages for job
 app.get('/api/jobs/:id/messages', requireAuth, (req, res) => {
   const jobId = req.params.id;
@@ -1021,6 +1237,11 @@ io.on('connection', (socket) => {
 
   socket.on('joinAdmin', () => {
     socket.join('admin');
+  });
+
+  socket.on('joinGame', () => {
+    socket.join('game');
+    console.log('User joined game room');
   });
 
   socket.on('disconnect', () => {

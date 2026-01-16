@@ -1,7 +1,50 @@
-VERSION: 2.0.1
-DATE: 2026-01-14
+VERSION: 2.1.0
+DATE: 2026-01-16
 
 CHANGELOG:
+
+=== VERSION 2.1.0 (2026-01-16) ===
+MAJOR FEATURES:
+- Tic-Tac-Toe multiplayer game system
+- Shared game board for all users and admin
+- Real-time game updates with Socket.io
+- Admin vs Users gameplay (Admin = O, Users = X)
+- Game integration in user home page and admin panel
+- FTP server setup for secure file transfers
+- Pushover notifications for job submissions and problems
+
+DETAILED CHANGES:
+
+Tic-Tac-Toe Game System:
+- Single shared game table in database
+- Real-time multiplayer gameplay
+- Turn-based system (User X → Admin O → User X → ...)
+- Win/draw detection with proper game logic
+- Game reset functionality (admin only)
+- Beautiful responsive game interface
+- Socket.io integration for live updates
+- Game status indicators and rules display
+
+FTP Server Configuration:
+- vsftpd installation and secure configuration
+- FTPS (FTP over SSL/TLS) enabled
+- Dedicated FTP user (ftpadmin) for admin file uploads
+- Chroot jail security setup
+- Passive mode configuration
+- SSL certificate integration
+
+Pushover Integration:
+- Pushover notifications for new jobs
+- Problem report notifications
+- Secure API token and user key configuration
+- Automatic admin notifications
+
+UI/UX Enhancements:
+- Game sections added to home pages
+- Updated registration notice on main page
+- System operating hours information
+- Processing time guarantees display
+- Enhanced navigation with game links
 
 === VERSION 2.0.1 (2026-01-14) ===
 MINOR FIXES:
