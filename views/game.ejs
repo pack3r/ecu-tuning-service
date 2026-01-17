@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Kółko i Krzyżyk - Serwis Plików</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
     <script src="/socket.io/socket.io.js"></script>
     <style>
       .game-container {
@@ -105,14 +105,14 @@
       <div class="logo">Serwis Plików</div>
       <nav>
         <% if (isAdmin) { %>
-          <a href="/admin/jobs" class="btn">Panel Administratora</a>
+          <a href="/tfs/admin/jobs" class="btn">Panel Administratora</a>
         <% } else { %>
-          <a href="/jobs/new" class="btn">Nowe Zadanie</a>
-          <a href="/jobs/history" class="btn">Historia Zadań</a>
+          <a href="/tfs/jobs/new" class="btn">Nowe Zadanie</a>
+          <a href="/tfs/jobs/history" class="btn">Historia Zadań</a>
         <% } %>
-        <a href="/home" class="btn">Strona Główna</a>
+        <a href="/tfs/home" class="btn">Strona Główna</a>
         <span style="color: #6b7280; font-size: 0.9rem; margin-left: 1rem;">🎮 Gra tymczasowo niedostępna</span>
-        <form action="/logout" method="POST" style="display: inline;">
+        <form action="/tfs/logout" method="POST" style="display: inline;">
           <button type="submit" class="btn btn-secondary">Wyloguj</button>
         </form>
       </nav>

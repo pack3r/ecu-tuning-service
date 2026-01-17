@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <title>Edytuj użytkownika - Admin - Serwis Plików</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Panel administracyjny</div>
       <nav>
-        <a href="/admin/jobs" class="btn">Zadania</a>
-        <a href="/admin/users" class="btn">Użytkownicy</a>
+        <a href="/tfs/admin/jobs" class="btn">Zadania</a>
+        <a href="/tfs/admin/users" class="btn">Użytkownicy</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/logout">
+        <form method="post" action="/tfs/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -20,7 +20,7 @@
 
     <main class="container">
       <h1>Edytuj użytkownika #<%= user.id %></h1>
-      <form method="post" action="/admin/users/<%= user.id %>/edit" class="card">
+      <form method="post" action="/tfs/admin/users/<%= user.id %>/edit" class="card">
         <label>Nazwa użytkownika</label>
         <input type="text" name="username" value="<%= user.username %>" required />
 
@@ -35,7 +35,7 @@
 
         <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
       </form>
-      <a href="/admin/users" class="btn">← Powrót do listy użytkowników</a>
+      <a href="/tfs/admin/users" class="btn">← Powrót do listy użytkowników</a>
     </main>
   </body>
   </html>

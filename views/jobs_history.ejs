@@ -3,17 +3,17 @@ ok<!DOCTYPE html>
   <head>
     <meta charset="UTF-8" />
     <title>Historia zadań - Serwis Plików</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Serwis Plików</div>
       <nav>
-        <a href="/home" class="btn">Panel główny</a>
-        <a href="/jobs/new" class="btn">Nowe zadanie</a>
-        <a href="/jobs/history" class="btn">Historia zadań</a>
+        <a href="/tfs/home" class="btn">Panel główny</a>
+        <a href="/tfs/jobs/new" class="btn">Nowe zadanie</a>
+        <a href="/tfs/jobs/history" class="btn">Historia zadań</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/logout">
+        <form method="post" action="/tfs/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -73,17 +73,17 @@ ok<!DOCTYPE html>
               <td><%= job.original_filename %></td>
               <td><%= translateStatus(job.status) %></td>
               <td><%= job.created_at %></td>
-              <td><a href="/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a></td>
+              <td><a href="/tfs/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a></td>
               <td>
                 <% if (job.status === 'pending') { %>
-                <a href="/jobs/<%= job.id %>/edit" class="btn-sm">Edytuj</a>
+                <a href="/tfs/jobs/<%= job.id %>/edit" class="btn-sm">Edytuj</a>
                 <% } else { %>
                 <span style="color: #9ca3af;">-</span>
                 <% } %>
               </td>
               <td>
                 <% if (job.processed_filename) { %>
-                <a href="/jobs/<%= job.id %>/download" class="btn-sm">Pobierz</a>
+                <a href="/tfs/jobs/<%= job.id %>/download" class="btn-sm">Pobierz</a>
                 <% } else { %>
                 <span>-</span>
                 <% } %>

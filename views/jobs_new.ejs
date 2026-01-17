@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Nowe zadanie - Serwis Plików</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Serwis Plików</div>
       <nav>
-        <a href="/home" class="btn">Panel główny</a>
-        <a href="/jobs/new" class="btn">Nowe zadanie</a>
-        <a href="/jobs/history" class="btn">Historia zadań</a>
+        <a href="/tfs/home" class="btn">Panel główny</a>
+        <a href="/tfs/jobs/new" class="btn">Nowe zadanie</a>
+        <a href="/tfs/jobs/history" class="btn">Historia zadań</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/logout">
+        <form method="post" action="/tfs/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -22,7 +22,7 @@
     <main class="container">
       <section class="card">
         <h2>Prześlij nowy plik</h2>
-        <form method="post" action="/upload" enctype="multipart/form-data" class="aligned-form">
+        <form method="post" action="/tfs/upload" enctype="multipart/form-data" class="aligned-form">
           <div class="form-group">
             <label>Plik <span style="color: red;">*</span></label>
             <input type="file" name="file" required />
