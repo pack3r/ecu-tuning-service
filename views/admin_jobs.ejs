@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Admin - Zadania - Serwis Plików</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Panel administracyjny</div>
       <nav>
-        <a href="/admin/jobs" class="btn">Zadania</a>
-        <a href="/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
-        <a href="/admin/users" class="btn">Użytkownicy</a>
+        <a href="/tfs/admin/jobs" class="btn">Zadania</a>
+        <a href="/tfs/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
+        <a href="/tfs/admin/users" class="btn">Użytkownicy</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/logout">
+        <form method="post" action="/tfs/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -133,10 +133,10 @@
                 %>
               </td>
               <td>
-                <a href="/admin/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a>
+                <a href="/tfs/admin/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a>
               </td>
               <td>
-                <a href="/admin/jobs/<%= job.id %>/original" class="btn-sm">Pobierz</a>
+                <a href="/tfs/admin/jobs/<%= job.id %>/original" class="btn-sm">Pobierz</a>
               </td>
             </tr>
             <% }); %>
@@ -168,14 +168,14 @@
       socket.on('problemReport', (reportData) => {
         const problemNotification = document.getElementById('problem-notification');
         const problemLink = document.getElementById('problem-link');
-        problemLink.href = `/admin/jobs/${reportData.job_id}`;
+        problemLink.href = `/tfs/admin/jobs/${reportData.job_id}`;
         problemNotification.style.display = 'block';
       });
 
       socket.on('problemResolved', (data) => {
         // Check if the resolved problem matches the current notification
         const problemLink = document.getElementById('problem-link');
-        if (problemLink && problemLink.href.includes(`/admin/jobs/${data.job_id}`)) {
+        if (problemLink && problemLink.href.includes(`/tfs/admin/jobs/${data.job_id}`)) {
           const problemNotification = document.getElementById('problem-notification');
           problemNotification.style.display = 'none';
         }
@@ -194,7 +194,7 @@
 
               const problemNotification = document.getElementById('problem-notification');
               const problemLink = document.getElementById('problem-link');
-              problemLink.href = `/admin/jobs/${problems[0].job_id}`;
+              problemLink.href = `/tfs/admin/jobs/${problems[0].job_id}`;
               problemNotification.style.display = 'block';
             } else {
               complaintsBtn.style.backgroundColor = '#e5e7eb';
