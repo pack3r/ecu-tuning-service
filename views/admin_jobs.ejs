@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Admin - Zadania - Serwis Plików</title>
-    <link rel="stylesheet" href="/tfs/tfs/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Panel administracyjny</div>
       <nav>
-        <a href="/tfs/tfs/admin/jobs" class="btn">Zadania</a>
-        <a href="/tfs/tfs/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
-        <a href="/tfs/tfs/admin/users" class="btn">Użytkownicy</a>
+        <a href="/tfs/admin/jobs" class="btn">Zadania</a>
+        <a href="/tfs/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
+        <a href="/tfs/admin/users" class="btn">Użytkownicy</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/tfs/tfs/logout">
+        <form method="post" action="/tfs/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -133,10 +133,10 @@
                 %>
               </td>
               <td>
-                <a href="/tfs/tfs/admin/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a>
+                <a href="/tfs/admin/jobs/<%= job.id %>" class="btn-sm">Szczegóły</a>
               </td>
               <td>
-                <a href="/tfs/tfs/admin/jobs/<%= job.id %>/original" class="btn-sm">Pobierz</a>
+                <a href="/tfs/admin/jobs/<%= job.id %>/original" class="btn-sm">Pobierz</a>
               </td>
             </tr>
             <% }); %>

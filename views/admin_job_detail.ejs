@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Szczegóły zadania #<%= job.id %> - Serwis Plików</title>
-    <link rel="stylesheet" href="/tfs/tfs/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Panel administracyjny</div>
       <nav>
-        <a href="/tfs/tfs/admin/jobs" class="btn">Zadania</a>
-        <a href="/tfs/tfs/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
-        <a href="/tfs/tfs/admin/users" class="btn">Użytkownicy</a>
+        <a href="/tfs/admin/jobs" class="btn">Zadania</a>
+        <a href="/tfs/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
+        <a href="/tfs/admin/users" class="btn">Użytkownicy</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/tfs/tfs/logout">
+        <form method="post" action="/tfs/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -100,9 +100,9 @@
               </div>
 
               <div style="margin-top: 1rem;">
-                <a href="/tfs/tfs/admin/jobs/<%= job.id %>/original" class="btn" style="margin-right: 1rem;">Pobierz plik oryginalny</a>
+                <a href="/tfs/admin/jobs/<%= job.id %>/original" class="btn" style="margin-right: 1rem;">Pobierz plik oryginalny</a>
                 <% if (job.processed_filename) { %>
-                <a href="/tfs/tfs/admin/jobs/<%= job.id %>/processed" class="btn btn-primary">Pobierz plik przetworzony</a>
+                <a href="/tfs/admin/jobs/<%= job.id %>/processed" class="btn btn-primary">Pobierz plik przetworzony</a>
                 <% } %>
               </div>
             </div>
@@ -179,7 +179,7 @@
         <!-- Client Message -->
         <div style="margin-bottom: 2rem;">
           <h2>Wiadomość dla klienta</h2>
-          <form method="post" action="/tfs/tfs/admin/jobs/<%= job.id %>/update_message">
+          <form method="post" action="/tfs/admin/jobs/<%= job.id %>/update_message">
             <textarea name="client_message" rows="4" placeholder="Wpisz wiadomość dla klienta" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"><%= job.client_message || '' %></textarea>
             <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Zapisz wiadomość</button>
           </form>
