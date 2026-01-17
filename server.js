@@ -245,7 +245,7 @@ const upload = multer({ storage });
 // Helpers
 function requireAuth(req, res, next) {
   if (!req.session.user) {
-    return res.redirect('/login');
+    return res.redirect('/tfs/login');
   }
   next();
 }
@@ -270,10 +270,10 @@ app.get('/', (req, res) => {
     return res.render('index');
   }
   if (req.session.user.role === 'admin') {
-    return res.redirect('/admin/jobs');
+    return res.redirect('/tfs/admin/jobs');
   }
   // Clients go to the dedicated welcome page
-  return res.redirect('/home');
+  return res.redirect('/tfs/home');
 });
 
 app.get('/register', (req, res) => {
@@ -296,7 +296,7 @@ app.post('/register', (req, res) => {
       }
       req.session.user = { id: this.lastID, email, username, role: 'client' };
       // After registration, show the welcome page
-      res.redirect('/home');
+      res.redirect('/tfs/home');
     }
   );
 });
@@ -320,10 +320,10 @@ app.post('/login', (req, res) => {
     }
     req.session.user = { id: user.id, email: user.email, username: user.username, role: user.role };
     if (user.role === 'admin') {
-      return res.redirect('/admin/jobs');
+      return res.redirect('/tfs/admin/jobs');
     }
     // For clients, go to the welcome page
-    res.redirect('/home');
+    res.redirect('/tfs/home');
   });
 });
 

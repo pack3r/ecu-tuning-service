@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>Logowanie - Serwis Plików</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/tfs/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Serwis Plików</div>
       <nav>
-        <a href="/register" class="btn">Rejestracja</a>
+        <a href="/tfs/register" class="btn">Rejestracja</a>
         <div class="phone-number">📞 +48 533 193 112</div>
       </nav>
     </header>
@@ -19,7 +19,7 @@
       <% if (error) { %>
       <div class="alert"><%= error %></div>
       <% } %>
-      <form method="post" action="/login" class="card">
+      <form method="post" action="/tfs/login" class="card">
         <label>Email</label>
         <input type="email" name="email" required />
 
