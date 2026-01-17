@@ -111,6 +111,7 @@
           <a href="/jobs/history" class="btn">Historia Zadań</a>
         <% } %>
         <a href="/home" class="btn">Strona Główna</a>
+        <span style="color: #6b7280; font-size: 0.9rem; margin-left: 1rem;">🎮 Gra tymczasowo niedostępna</span>
         <form action="/logout" method="POST" style="display: inline;">
           <button type="submit" class="btn btn-secondary">Wyloguj</button>
         </form>
@@ -212,11 +213,17 @@
 
       // Handle cell clicks
       document.querySelectorAll('.game-cell').forEach(cell => {
-        cell.addEventListener('click', async () => {
+        cell.addEventListener('click', async (event) => {
+          console.log('Cell clicked:', event.target);
           const position = parseInt(cell.dataset.position);
+          console.log('Position:', position, 'Occupied:', cell.classList.contains('occupied'));
 
-          if (cell.classList.contains('occupied')) return;
+          if (cell.classList.contains('occupied')) {
+            console.log('Cell is occupied, ignoring click');
+            return;
+          }
 
+          console.log('Making move to position:', position);
           try {
             const response = await fetch('/api/game/move', {
               method: 'POST',
@@ -227,6 +234,7 @@
             });
 
             const result = await response.json();
+            console.log('Move result:', result);
 
             if (!result.success) {
               alert(result.error || 'Błąd wykonania ruchu');
