@@ -337,7 +337,7 @@ app.get('/home', requireAuth, (req, res) => {
 
 app.post('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.redirect('/');
+    res.redirect('/tfs/');
   });
 });
 
