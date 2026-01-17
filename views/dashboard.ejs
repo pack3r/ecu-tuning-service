@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Dashboard - File Tuning Service</title>
-    <link rel="stylesheet" href="/tfs/styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="top-bar">
@@ -11,7 +11,7 @@
       <nav>
         <a href="#new-task" class="btn">New task</a>
         <a href="#task-history" class="btn">Task history</a>
-        <form method="post" action="/tfs/logout">
+        <form method="post" action="/logout">
           <button type="submit" class="btn">Logout</button>
         </form>
       </nav>
@@ -22,7 +22,7 @@
 
     <section id="new-task" class="card">
         <h2>Upload new file</h2>
-        <form method="post" action="/tfs/upload" enctype="multipart/form-data">
+        <form method="post" action="/upload" enctype="multipart/form-data">
           <label>File</label>
           <input type="file" name="file" required />
 
@@ -66,7 +66,7 @@
               <td><%= job.created_at %></td>
               <td>
                 <% if (job.processed_filename) { %>
-                <a href="/tfs/jobs/<%= job.id %>/download" class="btn-sm">Download</a>
+                <a href="/jobs/<%= job.id %>/download" class="btn-sm">Download</a>
                 <% } else { %>
                 <span>-</span>
                 <% } %>

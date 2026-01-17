@@ -245,7 +245,7 @@ const upload = multer({ storage });
 // Helpers
 function requireAuth(req, res, next) {
   if (!req.session.user) {
-    return res.redirect('/tfs/login');
+    return res.redirect('/login');
   }
   next();
 }
@@ -270,10 +270,10 @@ app.get('/', (req, res) => {
     return res.render('index');
   }
   if (req.session.user.role === 'admin') {
-    return res.redirect('/tfs/admin/jobs');
+    return res.redirect('/admin/jobs');
   }
   // Clients go to the dedicated welcome page
-  return res.redirect('/tfs/home');
+  return res.redirect('/home');
 });
 
 app.get('/register', (req, res) => {
@@ -296,7 +296,7 @@ app.post('/register', (req, res) => {
       }
       req.session.user = { id: this.lastID, email, username, role: 'client' };
       // After registration, show the welcome page
-      res.redirect('/tfs/home');
+      res.redirect('/home');
     }
   );
 });
@@ -320,30 +320,30 @@ app.post('/login', (req, res) => {
     }
     req.session.user = { id: user.id, email: user.email, username: user.username, role: user.role };
     if (user.role === 'admin') {
-      return res.redirect('/tfs/admin/jobs');
+      return res.redirect('/admin/jobs');
     }
     // For clients, go to the welcome page
-    res.redirect('/tfs/home');
+    res.redirect('/home');
   });
 });
 
 // Client welcome page
 app.get('/home', requireAuth, (req, res) => {
   if (req.session.user.role === 'admin') {
-    return res.redirect('/tfs/admin/jobs');
+    return res.redirect('/admin/jobs');
   }
   res.render('home');
 });
 
 app.post('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.redirect('/tfs/');
+    res.redirect('/');
   });
 });
 
 // Client dashboard (kept for backward compatibility, redirect to new job page)
 app.get('/dashboard', requireAuth, (req, res) => {
-  return res.redirect('/tfs/jobs/new');
+  return res.redirect('/jobs/new');
 });
 
 // New job page
@@ -444,7 +444,7 @@ app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
       }
 
       // After creating a job, go to the history page
-      res.redirect('/tfs/jobs/history');
+      res.redirect('/jobs/history');
     }
   );
 });
@@ -525,7 +525,7 @@ app.post('/jobs/:id/edit', requireAuth, (req, res) => {
             console.error(updateErr);
             return res.status(500).send('Database error');
           }
-          res.redirect('/tfs/jobs/history');
+          res.redirect('/jobs/history');
         }
       );
     }
@@ -577,7 +577,7 @@ app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
         [jobId],
         (err, existingReport) => {
           if (existingReport) {
-            return res.redirect(`/tfs/jobs/${jobId}`);
+            return res.redirect(`/jobs/${jobId}`);
           }
 
           // Create problem report
@@ -617,7 +617,7 @@ app.post('/jobs/:id/report_problem', requireAuth, (req, res) => {
                 }).catch(err => console.error('Pushover notification failed:', err));
               }
 
-              res.redirect(`/tfs/jobs/${jobId}`);
+              res.redirect(`/jobs/${jobId}`);
             }
           );
         }
@@ -779,7 +779,7 @@ app.post('/admin/jobs/:id/complete', requireAdmin, (req, res) => {
           console.error(updateErr);
           return res.status(500).send('Database error');
         }
-        res.redirect('/tfs/admin/jobs');
+        res.redirect('/admin/jobs');
       }
     );
   });
@@ -796,7 +796,7 @@ app.post('/admin/jobs/:id/cancel', requireAdmin, (req, res) => {
         console.error(err);
         return res.status(500).send('Database error');
       }
-      res.redirect('/tfs/admin/jobs');
+      res.redirect('/admin/jobs');
     }
   );
 });
@@ -813,7 +813,7 @@ app.post('/admin/jobs/:id/update_message', requireAdmin, (req, res) => {
         console.error(err);
         return res.status(500).send('Database error');
       }
-      res.redirect(`/tfs/admin/jobs/${jobId}`);
+      res.redirect(`/admin/jobs/${jobId}`);
     }
   );
 });
@@ -830,7 +830,7 @@ app.post('/admin/jobs/:id/reopen_chat', requireAdmin, (req, res) => {
         return res.status(404).send('No open problem report found');
       }
       // Reopen the chat by updating job status or just redirect - the chat logic will handle it
-      res.redirect(`/tfs/admin/jobs/${jobId}`);
+      res.redirect(`/admin/jobs/${jobId}`);
     }
   );
 });
@@ -869,7 +869,7 @@ app.post('/admin/jobs/:id/upload_corrected', requireAdmin, (req, res) => {
             console.error(updateErr);
             return res.status(500).send('Database error');
           }
-          res.redirect(`/tfs/admin/jobs/${jobId}`);
+          res.redirect(`/admin/jobs/${jobId}`);
         }
       );
     });
@@ -889,7 +889,7 @@ app.post('/admin/jobs/:id/close_problem', requireAdmin, (req, res) => {
       }
       // Notify all admins that problem is resolved
       io.to('admin').emit('problemResolved', { job_id: jobId });
-      res.redirect(`/tfs/admin/jobs/${jobId}`);
+      res.redirect(`/admin/jobs/${jobId}`);
     }
   );
 });
@@ -967,7 +967,7 @@ app.post('/admin/users/:id/edit', requireAdmin, (req, res) => {
         console.error(err);
         return res.status(500).send('Database error');
       }
-      res.redirect('/tfs/admin/users');
+      res.redirect('/admin/users');
     }
   );
 });

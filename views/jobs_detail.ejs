@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Szczegóły zlecenia #<%= job.id %> - Serwis Plików</title>
-    <link rel="stylesheet" href="/tfs/styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Serwis Plików</div>
       <nav>
-        <a href="/tfs/home" class="btn">Panel główny</a>
-        <a href="/tfs/jobs/new" class="btn">Nowe zadanie</a>
-        <a href="/tfs/jobs/history" class="btn">Historia zadań</a>
+        <a href="/home" class="btn">Panel główny</a>
+        <a href="/jobs/new" class="btn">Nowe zadanie</a>
+        <a href="/jobs/history" class="btn">Historia zadań</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/tfs/logout">
+        <form method="post" action="/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -79,7 +79,7 @@
 
               <% if (job.processed_filename && job.status === 'completed') { %>
               <div style="margin-top: 1rem; display: flex; gap: 1rem;">
-                <a href="/tfs/jobs/<%= job.id %>/download" class="btn btn-primary">Pobierz przetworzony plik</a>
+                <a href="/jobs/<%= job.id %>/download" class="btn btn-primary">Pobierz przetworzony plik</a>
                 <button type="button" class="btn" style="background: #dc2626; color: white;" onclick="showProblemForm()">Zgłoś problem</button>
               </div>
 
@@ -87,7 +87,7 @@
               <div id="problem-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 500px;">
                   <h3>Zgłoś problem</h3>
-                  <form method="post" action="/tfs/jobs/<%= job.id %>/report_problem">
+                  <form method="post" action="/jobs/<%= job.id %>/report_problem">
                     <div style="margin-bottom: 1rem;">
                       <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Opisz problem z plikiem <span style="color: red;">*</span></label>
                       <textarea name="description" rows="4" placeholder="Opisz dokładnie jaki problem masz z pobranym plikiem..." style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" required></textarea>
@@ -183,7 +183,7 @@
 
         <!-- Action Buttons -->
         <div style="display: flex; gap: 1rem; justify-content: center; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
-          <a href="/tfs/jobs/history" class="btn">← Powrót do historii zadań</a>
+          <a href="/jobs/history" class="btn">← Powrót do historii zadań</a>
         </div>
       </div>
     </main>

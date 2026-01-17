@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Szczegóły zadania #<%= job.id %> - Serwis Plików</title>
-    <link rel="stylesheet" href="/tfs/styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="top-bar">
       <div class="logo">Panel administracyjny</div>
       <nav>
-        <a href="/tfs/admin/jobs" class="btn">Zadania</a>
-        <a href="/tfs/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
-        <a href="/tfs/admin/users" class="btn">Użytkownicy</a>
+        <a href="/admin/jobs" class="btn">Zadania</a>
+        <a href="/admin/complaints" class="btn" id="complaints-btn">Reklamacje</a>
+        <a href="/admin/users" class="btn">Użytkownicy</a>
         <div class="phone-number">📞 +48 533 193 112</div>
-        <form method="post" action="/tfs/logout">
+        <form method="post" action="/logout">
           <button type="submit" class="btn">Wyloguj</button>
         </form>
       </nav>
@@ -100,9 +100,9 @@
               </div>
 
               <div style="margin-top: 1rem;">
-                <a href="/tfs/admin/jobs/<%= job.id %>/original" class="btn" style="margin-right: 1rem;">Pobierz plik oryginalny</a>
+                <a href="/admin/jobs/<%= job.id %>/original" class="btn" style="margin-right: 1rem;">Pobierz plik oryginalny</a>
                 <% if (job.processed_filename) { %>
-                <a href="/tfs/admin/jobs/<%= job.id %>/processed" class="btn btn-primary">Pobierz plik przetworzony</a>
+                <a href="/admin/jobs/<%= job.id %>/processed" class="btn btn-primary">Pobierz plik przetworzony</a>
                 <% } %>
               </div>
             </div>
@@ -179,7 +179,7 @@
         <!-- Client Message -->
         <div style="margin-bottom: 2rem;">
           <h2>Wiadomość dla klienta</h2>
-          <form method="post" action="/tfs/admin/jobs/<%= job.id %>/update_message">
+          <form method="post" action="/admin/jobs/<%= job.id %>/update_message">
             <textarea name="client_message" rows="4" placeholder="Wpisz wiadomość dla klienta" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"><%= job.client_message || '' %></textarea>
             <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Zapisz wiadomość</button>
           </form>
@@ -199,7 +199,7 @@
         <% if (!job.processed_filename) { %>
         <div style="margin-bottom: 2rem;">
           <h2>Prześlij plik przetworzony</h2>
-          <form method="post" action="/tfs/admin/jobs/<%= job.id %>/complete" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center;">
+          <form method="post" action="/admin/jobs/<%= job.id %>/complete" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center;">
             <input type="file" name="processed_file" required style="flex: 1;" />
             <button type="submit" class="btn btn-primary">Prześlij plik</button>
           </form>
@@ -213,7 +213,7 @@
           <p>Klient zgłosił problem ze zleceniem. Możesz przesłać poprawioną wersję pliku lub po przedyskutowaniu problemu w czacie kliknąć "Zakończ".</p>
 
           <h3>Prześlij poprawioną wersję pliku</h3>
-          <form method="post" action="/tfs/admin/jobs/<%= job.id %>/upload_corrected" enctype="multipart/form-data" style="margin-bottom: 1rem;">
+          <form method="post" action="/admin/jobs/<%= job.id %>/upload_corrected" enctype="multipart/form-data" style="margin-bottom: 1rem;">
             <div style="display: flex; gap: 1rem; align-items: center;">
               <input type="file" name="corrected_file" required />
               <button type="submit" class="btn btn-primary">Prześlij poprawiony plik</button>
@@ -221,7 +221,7 @@
             <small style="color: #6b7280;">Aktualna wersja pliku: <%= job.file_version || 1 %></small>
           </form>
 
-          <form method="post" action="/tfs/admin/jobs/<%= job.id %>/close_problem" style="display: inline;">
+          <form method="post" action="/admin/jobs/<%= job.id %>/close_problem" style="display: inline;">
             <button type="submit" class="btn" style="background: #16a34a; color: white;">Zakończ zgłoszenie problemu</button>
           </form>
         </div>
@@ -229,13 +229,13 @@
 
         <!-- Action Buttons -->
         <div style="display: flex; gap: 1rem; justify-content: center; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
-          <a href="/tfs/admin/jobs" class="btn">← Powrót do listy zadań</a>
-          <a href="/tfs/admin/jobs/<%= job.id %>/original" class="btn">Pobierz oryginalny plik</a>
+          <a href="/admin/jobs" class="btn">← Powrót do listy zadań</a>
+          <a href="/admin/jobs/<%= job.id %>/original" class="btn">Pobierz oryginalny plik</a>
           <% if (job.processed_filename) { %>
-          <a href="/tfs/admin/jobs/<%= job.id %>/processed" class="btn btn-primary">Pobierz przetworzony plik</a>
+          <a href="/admin/jobs/<%= job.id %>/processed" class="btn btn-primary">Pobierz przetworzony plik</a>
           <% } %>
           <% if (job.status !== 'completed') { %>
-          <form method="post" action="/tfs/admin/jobs/<%= job.id %>/cancel" style="display: inline;">
+          <form method="post" action="/admin/jobs/<%= job.id %>/cancel" style="display: inline;">
             <button type="submit" class="btn" style="background: #dc2626; color: white;">Anuluj zlecenie</button>
           </form>
           <% } %>
